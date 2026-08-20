@@ -1,2649 +1,1624 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>B2B Toplantı Yönetim Sistemi</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    /*
-      TASARIM SİSTEMİ
-    */
-    :root {
-      --bg: #F3F5F9;
-      --bg-glow: radial-gradient(circle at 50% -10%, rgba(59, 91, 219, 0.06), transparent 40%);
-      --card: #FFFFFF;
-      --card-alt: #F7F9FC;
-      --header: #EEF1F7;
-      --ink: #1B2230;
-      --blue: #3457D5;
-      --blue-dim: #23408F;
-      --green: #1E9E5A;
-      --yellow: #B5790E;
-      --red: #D93A3A;
-      --white: #1B2230;
-      --gray: #626D82;
-      --gray-dim: #8892A3;
-      --border: #DDE3ED;
-      --border-soft: #E6EAF2;
-      --cell: #FFFFFF;
-      --snap: rgba(52, 87, 213, 0.05);
-
-      --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
-      --font-body: 'Inter', 'Segoe UI', Arial, sans-serif;
-      --font-mono: 'JetBrains Mono', 'Consolas', monospace;
-    }
-
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-
-    body {
-      min-height: 100vh;
-      font-family: var(--font-body);
-      background: var(--bg-glow), var(--bg);
-      background-attachment: fixed;
-      color: var(--white);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    button, input, textarea, select { font-family: inherit; }
-
-    button {
-      cursor: pointer;
-      border: 0;
-      border-radius: 9px;
-      padding: 10px 13px;
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 12.5px;
-      letter-spacing: 0.02em;
-      color: var(--white);
-      background: var(--blue);
-      transition: transform 0.08s ease, filter 0.12s ease, opacity 0.08s ease, box-shadow 0.12s ease;
-      white-space: nowrap;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset;
-    }
-
-    button:hover { filter: brightness(1.12); box-shadow: 0 4px 14px rgba(91, 124, 255, 0.28), 0 1px 0 rgba(255,255,255,0.08) inset; }
-    button:active { transform: translateY(1px); filter: brightness(0.98); }
-    button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-    button.secondary { background: var(--header); border: 1px solid var(--border); box-shadow: none; }
-    button.secondary:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
-    button.green { background: var(--green); color: #052014; }
-    button.green:hover { box-shadow: 0 4px 14px rgba(63, 217, 138, 0.28); }
-    button.yellow { background: var(--yellow); color: #1d1204; }
-    button.yellow:hover { box-shadow: 0 4px 14px rgba(228, 169, 59, 0.28); }
-    button.red { background: var(--red); color: #200404; }
-    button.red:hover { box-shadow: 0 4px 14px rgba(255, 93, 93, 0.28); }
-    button.ghost { background: transparent; border: 1px solid var(--border); color: var(--gray); box-shadow: none; }
-    button.ghost:hover { color: var(--white); border-color: var(--gray-dim); box-shadow: none; }
-    button.small { padding: 4px 6px; font-size: 10.5px; border-radius: 6px; line-height: 1; }
-
-    input, textarea, select {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 10px 11px;
-      background: var(--cell);
-      color: var(--white);
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.12s ease, box-shadow 0.12s ease;
-    }
-
-    textarea { resize: vertical; min-height: 92px; font-family: var(--font-mono); font-size: 12.5px; }
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(91, 124, 255, 0.18);
-    }
-    
-    input[type="color"] { padding: 2px; height: 38px; cursor: pointer; }
-    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .app-shell {
-      width: min(1760px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 22px 0 34px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 16px;
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: clamp(22px, 2.4vw, 32px);
-      line-height: 1.15;
-      letter-spacing: -0.01em;
-    }
-    .top-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-
-    .control-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 400px;
-      gap: 16px;
-      align-items: start;
-    }
-
-    .left-column { display: grid; gap: 14px; min-width: 0; }
-
-    .panel {
-      border: 1px solid var(--border-soft);
-      border-radius: 16px;
-      background: var(--card);
-      box-shadow: 0 12px 32px rgba(27, 34, 48, 0.08);
-      overflow: hidden;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding: 13px 16px;
-      background: var(--header);
-      border-bottom: 1px solid var(--border-soft);
-    }
-
-    .panel-header h2, .panel-header h3 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 16.5px;
-      letter-spacing: -0.005em;
-    }
-    .panel-header span {
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.02em;
-    }
-    
-    .panel-header-actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      flex: 1;
-    }
-    
-    .panel-body { padding: 15px; }
-
-    .hall-canvas-wrap { padding: 14px; }
-
-    .hall-canvas {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      min-height: 520px;
-      border: 1px solid var(--border-soft);
-      border-radius: 18px;
-      overflow: hidden;
-      background:
-        repeating-linear-gradient(0deg, transparent 0, transparent calc(5% - 1px), var(--snap) calc(5% - 1px), var(--snap) 5%),
-        repeating-linear-gradient(90deg, transparent 0, transparent calc(5% - 1px), var(--snap) calc(5% - 1px), var(--snap) 5%),
-        radial-gradient(circle at 50% 0%, rgba(52, 87, 213, 0.06), transparent 34%),
-        #FBFCFE;
-      user-select: none;
-      touch-action: none;
-    }
-
-    .hall-canvas.follow {
-      min-height: auto;
-      height: min(92vh, 56.25vw);
-      max-height: calc(100vh - 54px);
-      aspect-ratio: 16 / 9;
-      margin: 0 auto;
-      border-radius: 0;
-      border-color: var(--border-soft);
-      background:
-        radial-gradient(circle at 50% 0%, rgba(52, 87, 213, 0.07), transparent 34%),
-        #FFFFFF;
-    }
-
-    .hall-canvas.edit-active {
-      outline: 3px dashed var(--blue);
-      outline-offset: -3px;
-    }
-
-    .door-sketch {
-      position: absolute;
-      left: -1px;
-      width: 5.2%;
-      height: 7.4%;
-      border: 1.5px dashed rgba(181, 121, 14, 0.65);
-      border-left: 0;
-      border-radius: 0 8px 8px 0;
-      background: rgba(181, 121, 14, 0.07);
-      color: rgba(27, 34, 48, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: clamp(8px, 0.8vw, 12px);
-      font-weight: 900;
-      letter-spacing: 0.05em;
-      pointer-events: none;
-    }
-
-    .door-sketch.door-1 { top: 29%; }
-    .door-sketch.door-2 { top: 64%; }
-
-    .layout-item {
-      position: absolute;
-      display: grid;
-      overflow: hidden;
-      border: 2px solid var(--border);
-      background: #FFFFFF;
-      box-shadow: 0 10px 26px rgba(27, 34, 48, 0.10);
-      color: var(--white);
-      cursor: grab;
-      isolation: isolate;
-      transition: border-color 0.12s ease, box-shadow 0.12s ease;
-      container-type: size;
-      container-name: table-item;
-    }
-
-    .layout-item:active { cursor: grabbing; }
-    .layout-item:not(.follow-readonly):hover { border-color: var(--gray-dim); }
-    .layout-item.selected { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(52, 87, 213, 0.16), 0 10px 26px rgba(27, 34, 48, 0.10); }
-    .layout-item.drop-ready { border-color: var(--yellow); box-shadow: 0 0 0 4px rgba(181, 121, 14, 0.16), 0 10px 26px rgba(27, 34, 48, 0.10); }
-    .layout-item.rect { border-radius: 15px; }
-    .layout-item.circle { border-radius: 50%; }
-    .layout-item.follow-readonly { cursor: default; }
-    
-    .layout-item.shape-item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 4px;
-      font-weight: 700;
-      font-size: clamp(10px, 1.5vw, 24px);
-      word-break: break-word;
-      line-height: 1.2;
-      font-family: var(--font-display);
-    }
-
-    .meeting-content {
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
-      height: 100%;
-      min-height: 0;
-      text-align: center;
-      width: 100%;
-    }
-
-    .meeting-title {
-      padding: 3px 8px;
-      background: linear-gradient(180deg, var(--blue), var(--blue-dim));
-      color: #fff;
-      font-family: var(--font-display);
-      font-size: clamp(11px, 12cqh, 30px);
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .meeting-main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      padding: 1px 6px;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .mini-label {
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: clamp(9px, 7.5cqh, 24px);
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      line-height: 1;
-    }
-
-    .meeting-time {
-      width: 100%;
-      font-family: var(--font-mono);
-      font-size: clamp(15px, 25cqh, 76px);
-      line-height: 1.15;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-      overflow: visible;
-      transition: color 0.2s ease;
-    }
-
-    .meeting-company {
-      width: 100%;
-      color: var(--white);
-      font-family: var(--font-display);
-      font-size: clamp(12px, 16cqh, 48px);
-      line-height: 1.1;
-      font-weight: 700;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow-wrap: anywhere;
-      min-height: 1.05em;
-    }
-
-    .meeting-queue-preview {
-      width: 100%;
-      margin-top: 3px;
-      border-top: 1px solid var(--border-soft);
-      padding-top: 3px;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .meeting-queue-preview ol {
-      margin: 2px 0 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      /* Satır bloğu kart içinde yatay olarak ortalanır; satırların
-         kendi içinde numara ve isim hizalı kalır. */
-      justify-content: center;
-      gap: 0;
-    }
-
-    .meeting-queue-preview li {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      align-items: center;
-      gap: 4px;
-      color: var(--yellow);
-      font-family: var(--font-body);
-      font-size: clamp(8px, 5cqh, 18px);
-      font-weight: 700;
-      line-height: 1.05;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      text-align: left;
-    }
-
-    .meeting-queue-preview li span {
-      color: rgba(181, 121, 14, 0.8);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .meeting-queue-preview li.empty-queue {
-      display: block;
-      text-align: center;
-      color: var(--gray-dim);
-      font-style: italic;
-    }
-
-    .meeting-meta {
-      display: flex;
-      justify-content: center;
-      padding: 3px 7px 4px;
-      color: var(--gray);
-      font-size: clamp(9px, 4.5cqh, 17px);
-      border-top: 1px solid var(--border-soft);
-      background: var(--card-alt);
-      overflow: hidden;
-    }
-
-    .meeting-meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    
-    .follow .meeting-meta { display: none; }
-    .follow .meeting-time { font-size: clamp(16px, 23cqh, 72px); }
-    .follow .meeting-company { font-size: clamp(12px, 12cqh, 34px); }
-    .follow .meeting-queue-preview li { font-size: clamp(12px, 6cqh, 24px); } 
-
-    /* Container Queries - Layout adjustments for scaling down */
-    @container table-item (max-height: 130px) {
-      .meeting-queue-preview .mini-label { display: none; }
-    }
-    @container table-item (max-height: 108px) {
-      .meeting-queue-preview { display: none; }
-      .mini-label { display: none; }
-    }
-    @container table-item (max-height: 76px) {
-      .meeting-meta { display: none; }
-    }
-
-    .selected-panel {
-      position: sticky;
-      top: 12px;
-      max-height: calc(100vh - 24px);
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-    }
-
-    .selected-panel .panel-body {
-      display: flex;
-      flex-direction: column;
-      gap: 13px;
-      overflow-y: auto;
-    }
-    .selected-panel .panel-body > * { flex: 0 0 auto; }
-
-    .participants-tools { display: grid; gap: 10px; }
-    .participants-panel-body {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .participants-panel-body > * { flex: 0 0 auto; }
-
-    .participants-panel-body .add-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-      align-items: end;
-    }
-    .participants-panel-body .sheet { max-height: 360px; }
-
-    .participants-tools .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-    .collapsible {
-      border: 1px solid var(--border-soft);
-      border-radius: 9px;
-      background: var(--card-alt);
-    }
-    .collapsible > summary {
-      cursor: pointer;
-      padding: 8px 11px;
-      color: var(--gray);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      list-style: none;
-      user-select: none;
-    }
-    .collapsible > summary::-webkit-details-marker { display: none; }
-    .collapsible > summary::before { content: '▸ '; color: var(--blue); }
-    .collapsible[open] > summary::before { content: '▾ '; }
-    .collapsible > summary:hover { color: var(--white); }
-    .collapsible-body { display: grid; gap: 8px; padding: 0 11px 11px; }
-
-    .sheet {
-      margin-top: 0;
-      border: 1px solid var(--border-soft);
-      border-radius: 10px;
-      overflow: auto;
-      background: var(--card-alt);
-      max-height: 200px;
-      flex: none;
-    }
-
-    .sheet-head {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      border-radius: 9px 9px 0 0;
-      display: grid;
-      grid-template-columns: 34px 62px 1fr 66px;
-      background: var(--header);
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      border-bottom: 1px solid var(--border-soft);
-    }
-
-    .sheet-head div { padding: 7px 8px; border-right: 1px solid var(--border); }
-    .sheet-head div:last-child { border-right: 0; }
-
-    .participant-cell {
-      display: grid;
-      grid-template-columns: 34px 62px 1fr 66px;
-      min-height: 34px;
-      align-items: center;
-      border-bottom: 1px solid var(--border-soft);
-      color: var(--white);
-      cursor: grab;
-      transition: background 0.1s ease;
-    }
-
-    .participant-cell:hover { background: rgba(52, 87, 213, 0.05); }
-    .participant-cell:active { cursor: grabbing; }
-    /* Sol sütun: katılımcının tahmini görüşme saati */
-    /* Sabit (Excel'den gelen) saat koyu ve dolgulu; otomatik hesaplanan
-       saat soluk gösterilir, böylece hangisinin sabit olduğu anlaşılır. */
-    /* Onay kutusu sütunu ve seçili satır vurgusu */
-    .sheet-head .head-check,
-    .participant-cell .row-check {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      align-self: stretch;
-      padding: 0 4px;
-      border-right: 1px solid var(--border-soft);
-    }
-    .sheet-head .head-check { background: var(--header); }
-    .participant-cell .row-check input,
-    .sheet-head .head-check input {
-      width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--blue);
-    }
-    .participant-cell.picked { background: rgba(52, 87, 213, 0.08); }
-    .participant-cell.picked:hover { background: rgba(52, 87, 213, 0.12); }
-
-    /* Toplu aktarma çubuğu */
-    .bulk-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 11px;
-      border: 1px solid var(--blue);
-      border-radius: 9px;
-      background: rgba(52, 87, 213, 0.07);
-    }
-    .bulk-count {
-      color: var(--blue);
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .bulk-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .bulk-hint { color: var(--gray); font-size: 12px; font-style: italic; }
-
-    .participant-cell .slot-time.fixed { color: var(--blue); font-weight: 700; }
-    .participant-cell .slot-time:not(.fixed) { color: var(--gray-dim); font-weight: 500; }
-    .participant-cell .slot-time:hover { background: rgba(52, 87, 213, 0.12); }
-
-    .participant-cell .slot-time {
-      cursor: pointer;
-      align-self: stretch;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 7px 6px;
-      color: var(--blue);
-      background: var(--header);
-      border-right: 1px solid var(--border-soft);
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Sürükleyerek sıralama sırasında bırakma konumu göstergesi */
-    .participant-cell.drop-above { box-shadow: inset 0 3px 0 0 var(--blue); }
-    .participant-cell.drop-below { box-shadow: inset 0 -3px 0 0 var(--blue); }
-
-    .participant-cell .cell-value {
-      padding: 7px 9px;
-      min-width: 0;
-      overflow-wrap: anywhere;
-      line-height: 1.3;
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .participant-cell .ops {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      padding: 5px 6px 5px 0;
-    }
-
-    /* --- Tüm Masa Sıraları tablosu --- */
-    .overview-queues {
-      border: 1px solid var(--border-soft);
-      border-radius: 10px;
-      overflow: auto;
-      background: var(--card-alt);
-      max-height: 340px;
-    }
-
-    .oq-row {
-      display: grid;
-      grid-template-columns: 76px repeat(var(--oq-cols), minmax(130px, 1fr));
-      border-bottom: 1px solid var(--border-soft);
-    }
-    .oq-row:last-child { border-bottom: 0; }
-
-    .oq-header {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: var(--header);
-    }
-
-    .oq-cell {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      min-width: 0;
-      padding: 7px 9px;
-      border-right: 1px solid var(--border-soft);
-      font-size: 12.5px;
-    }
-    .oq-cell:last-child { border-right: 0; }
-
-    .oq-head {
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 12.5px;
-      color: var(--white);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .oq-label {
-      justify-content: flex-end;
-      background: var(--header);
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .oq-clock.fixed { color: var(--blue); }
-    .oq-clock:not(.fixed) { color: var(--gray-dim); font-weight: 500; }
-
-    .oq-clock {
-      flex: none;
-      color: var(--blue);
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .oq-name {
-      min-width: 0;
-      font-weight: 600;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .oq-now { background: rgba(52, 87, 213, 0.07); }
-    .oq-now .oq-name { color: var(--blue); font-weight: 700; }
-    .oq-empty { color: var(--gray-dim); }
-
-    .sheet.empty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--gray);
-      padding: 28px;
-      text-align: center;
-      font-size: 13px;
-    }
-
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .form-grid .span { grid-column: 1 / -1; }
-    .button-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-    .button-grid .wide { grid-column: 1 / -1; }
-    .button-row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-
-    .section-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-soft); }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-    }
-    .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .status-pill.running { background: rgba(30, 158, 90, 0.12); color: var(--green); }
-    .status-pill.running .dot { background: var(--green); }
-    .status-pill.stopped { background: rgba(98, 109, 130, 0.12); color: var(--gray); }
-    .status-pill.stopped .dot { background: var(--gray-dim); }
-
-    .status-line {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      border: 1px solid var(--border-soft);
-      border-radius: 10px;
-      padding: 9px 10px;
-      background: var(--cell);
-      color: var(--gray);
-      font-size: 12.5px;
-      font-weight: 600;
-    }
-
-    .status-line .value { color: var(--white); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
-    .queue-box {
-      border: 1px solid var(--border-soft);
-      border-radius: 10px;
-      background: var(--card-alt);
-      overflow: hidden;
-    }
-
-    .queue-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 10px;
-      background: var(--header);
-      border-bottom: 1px solid var(--border-soft);
-      color: var(--gray-dim);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .queue-list { min-height: 70px; max-height: 300px; overflow: auto; }
-    .queue-list.drop-ready { outline: 3px solid rgba(210, 153, 34, 0.25); outline-offset: -3px; }
-
-    .queue-item {
-      display: grid;
-      grid-template-columns: 30px 1fr auto;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 8px;
-      border-bottom: 1px solid var(--border-soft);
-      cursor: grab;
-      transition: background 0.1s ease;
-    }
-
-    .queue-item:hover { background: rgba(228, 169, 59, 0.05); }
-
-    .queue-item.current-row {
-      background: rgba(52, 87, 213, 0.07);
-      border-bottom: 1px solid var(--border);
-      cursor: default;
-    }
-    .queue-item.current-row:hover { background: rgba(52, 87, 213, 0.10); }
-    .queue-item.current-row .num { color: var(--blue); font-weight: 700; }
-    .queue-item.current-row .name { color: var(--blue); }
-    .queue-item:last-child { border-bottom: 0; }
-    .queue-item .num { color: var(--gray-dim); font-family: var(--font-mono); font-size: 11.5px; text-align: right; }
-    .queue-item .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .queue-item .ops { display: flex; gap: 4px; }
-
-    .empty-note {
-      padding: 16px 10px;
-      color: var(--gray);
-      font-size: 13px;
-      text-align: center;
-      font-style: italic;
-    }
-
-    .follow-mode { overflow: hidden; background: var(--bg); }
-
-    .follow-screen {
-      min-height: 100vh;
-      padding: 14px;
-      background: var(--bg);
-      color: var(--white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .follow-exit {
-      position: fixed;
-      right: 18px;
-      top: 14px;
-      z-index: 5;
-      background: var(--card);
-      color: var(--gray);
-      border: 1px solid var(--border);
-      box-shadow: none;
-      opacity: 0.35;
-      transition: opacity 0.15s ease, color 0.15s ease;
-    }
-    .follow-exit:hover { opacity: 1; color: var(--white); box-shadow: 0 4px 14px rgba(27, 34, 48, 0.12); }
-
-    .empty-text { color: var(--gray-dim); font-style: italic; }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(27, 34, 48, 0.42);
-      backdrop-filter: blur(2px);
-      animation: modal-fade 0.12s ease;
-    }
-
-    @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
-
-    .modal-box {
-      width: min(520px, 100%);
-      border: 1px solid var(--border-soft);
-      border-radius: 16px;
-      background: var(--card);
-      box-shadow: 0 24px 60px rgba(27, 34, 48, 0.22);
-      overflow: hidden;
-      animation: modal-pop 0.14s ease;
-    }
-
-    @keyframes modal-pop { from { transform: translateY(6px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
-
-    .modal-header {
-      padding: 14px 18px;
-      background: var(--header);
-      border-bottom: 1px solid var(--border-soft);
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    .modal-body { padding: 18px; display: grid; gap: 12px; }
-    .modal-body p { margin: 0; color: var(--gray); font-size: 13.5px; line-height: 1.45; }
-    /* Butonlar sığmazsa alt satıra sarar; taşma olmaz. */
-    .modal-box.wide { width: min(620px, 100%); }
-
-    /* --- Plan paylaşım penceresi --- */
-    .share-step {
-      border: 1px solid var(--border-soft);
-      border-radius: 10px;
-      padding: 12px 13px;
-      background: var(--card-alt);
-    }
-    .share-step + .share-step { margin-top: 10px; }
-    .share-step.primary { border-color: var(--blue); background: rgba(52, 87, 213, 0.06); }
-    .share-more { margin-top: 10px; }
-    .share-step-title {
-      margin-bottom: 6px;
-      color: var(--blue);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .share-desc { margin: 0 0 10px; color: var(--gray); font-size: 12.5px; line-height: 1.45; }
-    .share-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-
-    .share-link {
-      width: 100%;
-      margin-bottom: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      line-height: 1.4;
-      resize: vertical;
-      word-break: break-all;
-      min-height: 62px;
-    }
-
-    .share-status { font-size: 12px; font-weight: 600; }
-    .share-status.ok { color: var(--green); }
-    .share-status.err { color: var(--red); }
-
-    .modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 0 18px 18px; }
-
-    @media (max-width: 780px) {
-      .modal-actions { flex-direction: column-reverse; }
-      .modal-actions button { width: 100%; }
-    }
-
-    @media (max-width: 1220px) {
-      .control-layout { grid-template-columns: 1fr; }
-      .selected-panel { position: static; max-height: none; }
-      .selected-panel .panel-body { overflow-y: visible; }
-      .sheet { max-height: 320px; }
-      .hall-canvas { min-height: 460px; }
-    }
-
-    @media (max-width: 780px) {
-      .app-shell { width: min(100% - 20px, 1760px); padding-top: 14px; }
-      .topbar { flex-direction: column; }
-      .top-actions { justify-content: stretch; width: 100%; }
-      .top-actions button { flex: 1 1 auto; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2B Görüşme Eşleştirme Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F9; --bg-glow:radial-gradient(circle at 50% -10%,rgba(59,91,219,.06),transparent 40%);
+  --card:#FFF; --card-alt:#F7F9FC; --header:#EEF1F7;
+  --blue:#3457D5; --blue-dim:#23408F; --green:#1E9E5A; --yellow:#B5790E; --red:#D93A3A;
+  --ink:#1B2230; --gray:#626D82; --gray-dim:#8892A3;
+  --border:#DDE3ED; --border-soft:#E6EAF2;
+  --font-display:'Space Grotesk','Segoe UI',sans-serif;
+  --font-body:'Inter','Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono','Consolas',monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{min-height:100vh;font-family:var(--font-body);background:var(--bg-glow),var(--bg);background-attachment:fixed;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font-family:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:10px 13px;font-family:var(--font-display);font-weight:700;font-size:12.5px;letter-spacing:.02em;color:#fff;background:var(--blue);transition:filter .12s,transform .08s,box-shadow .12s;white-space:nowrap}
+button:hover{filter:brightness(1.1)}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.secondary{background:var(--header);color:var(--ink);border:1px solid var(--border)}
+button.green{background:var(--green)}
+button.yellow{background:var(--yellow)}
+button.red{background:var(--red)}
+button.ghost{background:transparent;border:1px solid var(--border);color:var(--gray)}
+button.ghost:hover{color:var(--ink)}
+button.small{padding:5px 8px;font-size:10.5px;border-radius:6px}
+button:disabled{opacity:.45;cursor:not-allowed;filter:none}
+input,textarea,select{width:100%;border:1px solid var(--border);border-radius:9px;padding:10px 11px;background:#fff;color:var(--ink);font-size:14px;outline:none;transition:border-color .12s,box-shadow .12s}
+textarea{resize:vertical;min-height:90px;font-family:var(--font-mono);font-size:12px}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(52,87,213,.16)}
+label{display:block;margin-bottom:6px;color:var(--gray-dim);font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+.shell{width:min(100% - 28px,1700px);margin:0 auto;padding:16px 0 40px;display:grid;gap:14px}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.topbar h1{margin:0;font-family:var(--font-display);font-size:clamp(20px,2.2vw,30px);letter-spacing:-.01em}
+.top-actions{display:flex;flex-wrap:wrap;gap:8px}
+.panel{border:1px solid var(--border-soft);border-radius:16px;background:var(--card);box-shadow:0 12px 32px rgba(27,34,48,.07);overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--header);border-bottom:1px solid var(--border-soft)}
+.panel-header h2{margin:0;font-family:var(--font-display);font-size:16px;font-weight:600}
+.panel-header span{color:var(--gray-dim);font-family:var(--font-mono);font-size:11px}
+.panel-body{padding:15px;display:flex;flex-direction:column;gap:12px}
+.panel-body>*{flex:0 0 auto}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.section-label{display:flex;align-items:center;gap:8px;color:var(--gray-dim);font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border-soft)}
+.hint{color:var(--gray);font-size:12.5px;line-height:1.5;margin:0}
+.empty-note{padding:18px;text-align:center;color:var(--gray);font-size:13px;font-style:italic}
+
+.main-layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:14px;align-items:start}
+@media (max-width:1240px){.main-layout{grid-template-columns:1fr}}
+
+/* Masa kartları */
+.tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.table-card{border:2px solid var(--border);border-radius:14px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+.table-card.running{border-color:var(--green)}
+.table-card.warn{border-color:var(--yellow)}
+.table-card.over{border-color:var(--red)}
+.tc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:linear-gradient(180deg,var(--blue),var(--blue-dim));color:#fff;font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:.03em}
+.tc-body{padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.tc-label{color:var(--gray-dim);font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.tc-pair{font-family:var(--font-display);font-size:17px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.tc-time{font-family:var(--font-mono);font-size:40px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.tc-next{width:100%;border-top:1px solid var(--border-soft);padding-top:8px;color:var(--gray);font-size:12px}
+.tc-next b{color:var(--yellow)}
+.tc-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 12px 12px}
+.tc-actions .wide{grid-column:1/-1}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-family:var(--font-mono);font-size:10px;font-weight:600;background:rgba(255,255,255,.2)}
+
+/* Program tablosu */
+.sched{border:1px solid var(--border-soft);border-radius:10px;overflow:auto;max-height:520px;background:var(--card-alt)}
+.sched table{width:100%;border-collapse:collapse;font-size:12.5px}
+.sched th{position:sticky;top:0;background:var(--header);color:var(--gray-dim);font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-soft);z-index:1}
+.sched td{padding:7px 10px;border-bottom:1px solid var(--border-soft)}
+.sched tr:last-child td{border-bottom:0}
+.sched .clock{font-family:var(--font-mono);font-weight:700;color:var(--blue);white-space:nowrap}
+.sched .pair{font-weight:600}
+.sched tr.done{opacity:.5}
+.sched tr.now{background:rgba(52,87,213,.08)}
+.badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10px;font-family:var(--font-mono);font-weight:600;background:rgba(30,158,90,.14);color:var(--green);margin-left:6px}
+.badge.warn{background:rgba(181,121,14,.16);color:var(--yellow)}
+
+/* Takip ekranı */
+.follow-screen{min-height:100vh;padding:14px;display:flex;flex-direction:column;gap:12px}
+.follow-screen .topbar{padding-right:150px}
+.follow-screen h1{font-size:clamp(18px,2vw,28px)}
+.follow-screen .tables-grid{flex:1;align-content:start;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.follow-screen .table-card{min-height:min(42vh,340px)}
+.follow-screen .tc-body{flex:1;justify-content:center}
+.follow-exit{position:fixed;right:14px;bottom:14px;z-index:5;background:var(--card);color:var(--gray);border:1px solid var(--border);opacity:.3}
+.follow-exit:hover{opacity:1;color:var(--ink)}
+.follow-screen .tc-time{font-size:clamp(40px,6vw,86px)}
+.follow-screen .tc-pair{font-size:clamp(19px,2.3vw,32px)}
+.follow-screen .tc-next{font-size:14px}
+.follow-progress{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
+
+/* QR ekranı */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;text-align:center}
+.qr-box{background:#fff;padding:16px;border-radius:14px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+/* QR her zaman kare bir alanda ve orantısı korunarak gösterilir */
+.qr-box img,.qr-box canvas{display:block;width:min(70vw,420px);height:min(70vw,420px);object-fit:contain;image-rendering:pixelated}
+.qr-preview{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.qr-preview img{width:120px;height:120px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff;padding:4px}
+.qr-link{font-family:var(--font-mono);font-size:12px;word-break:break-all;max-width:560px;color:var(--gray)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(27,34,48,.42);backdrop-filter:blur(2px)}
+.modal-box{width:min(560px,100%);max-height:88vh;overflow:auto;border:1px solid var(--border-soft);border-radius:16px;background:var(--card);box-shadow:0 24px 60px rgba(27,34,48,.22)}
+.modal-box.wide{width:min(720px,100%)}
+.modal-header{padding:14px 18px;background:var(--header);border-bottom:1px solid var(--border-soft)}
+.modal-header h3{margin:0;font-family:var(--font-display);font-size:16px}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:12px}
+.modal-body p{margin:0;color:var(--gray);font-size:13px;line-height:1.5}
+.modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:0 18px 18px}
+
+details.collapsible{border:1px solid var(--border-soft);border-radius:9px;background:var(--card-alt)}
+details.collapsible>summary{cursor:pointer;padding:9px 12px;color:var(--gray);font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;list-style:none}
+details.collapsible>summary::-webkit-details-marker{display:none}
+details.collapsible>summary::before{content:'▸ ';color:var(--blue)}
+details.collapsible[open]>summary::before{content:'▾ '}
+.collapsible-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
+
+.firm-list{display:flex;flex-wrap:wrap;gap:6px;max-height:190px;overflow:auto;padding:2px}
+.firm-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 6px 4px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card-alt);font-size:12px;font-weight:600}
+.firm-chip button{padding:0 4px;background:none;color:var(--gray-dim);font-size:14px;border-radius:50%}
+.firm-chip button:hover{color:var(--red)}
+.unknown-row{border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;background:var(--card-alt);display:flex;flex-direction:column;gap:7px}
+.unknown-row select{font-size:12px;padding:5px 7px;flex:1;min-width:150px}
+.stat-row{display:flex;flex-wrap:wrap;gap:8px}
+.stat{flex:1;min-width:110px;border:1px solid var(--border-soft);border-radius:10px;padding:9px 11px;background:var(--card-alt)}
+.stat .k{color:var(--gray-dim);font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.stat .v{font-family:var(--font-mono);font-size:19px;font-weight:700;color:var(--blue)}
+.stat.warn .v{color:var(--yellow)}
+
+.audio-bar{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--yellow);border-radius:10px;background:rgba(181,121,14,.08);color:var(--yellow);font-size:12.5px;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
 </head>
 <body>
-  <div id="app"></div>
-  <div id="modalRoot"></div>
-  <script>
-    const STORAGE_KEY = 'b2b_state';
-    const DEFAULT_SECONDS = 15 * 60;
-    const SNAP_STEP = 2;
-    const MEETING_AUTO_AREA = { x: 6, y: 6, w: 88, h: 88 };
+<div id="app"></div>
+<div id="modalRoot"></div>
 
-    let state = loadState(true);
-    let selectedId = state.selectedId || firstTableId();
-    let tickTimer = null;
-    let followPollTimer = null;
-    let titleBlinkTimer = null;
-    let originalTitle = document.title;
-    let titleBlinkOn = false;
-    let draggingLayout = null;
-    let isEditMode = false;
-    // Katılımcı sütununda toplu aktarma için işaretlenen satırlar.
-    // Kalıcı değildir; sayfa yenilenince temizlenir.
-    let selectedParticipantIds = new Set();
+<script>
+/* ============================================================
+   B2B GÖRÜŞME EŞLEŞTİRME SİSTEMİ
+   Akış: Firmalar QR ile Google Form doldurur → talepler tablo
+   olarak içe aktarılır → planlayıcı görüşmeleri masalara dağıtır
+   → etkinlik sırasında sayaç ve sesli anonslar yürütülür.
+   ============================================================ */
 
-    function closeModal() {
-      const overlay = document.getElementById('modalOverlay');
-      if (overlay) overlay.remove();
-      document.removeEventListener('keydown', modalKeydownHandler);
+const STORAGE_KEY = 'b2b_match_state';
+
+let state = null;
+let route = 'kontrol';
+let tickTimer = null;
+let pollTimer = null;
+let sesAcik = false;
+
+/* ---------- 1) DURUM ---------- */
+
+function defaultState() {
+  return {
+    version: 1,
+    eventName: '',
+    formUrl: '',
+    webAppUrl: '',   // Apps Script web uygulaması adresi (formu tek tıkla üretir)
+    qrImage: '',   // yüklenen sabit QR görseli (data URL)
+    priorityMode: 'puan',   // 'puan' | 'fifo'
+    weights: { ilkGorusme: 22, sure: 6, yogunluk: 2.5, karsilikli: 14 },
+    firms: [],        // etkinliğe katılan firmaların resmi listesi
+    firmAliases: {},  // firmaAnahtar → onaylanmış esas firma adı
+    startTime: '09:00',
+    endTime: '18:00',
+    defaultDuration: 15,
+    tables: [
+      { id: 't1', title: 'MASA 1' },
+      { id: 't2', title: 'MASA 2' },
+      { id: 't3', title: 'MASA 3' }
+    ],
+    requests: [],     // {id, from, to, duration, order, createdAt}
+    schedule: [],     // {id, from, to, duration, tableId, tableTitle, start, end, mutual}
+    unscheduled: [],
+    live: {}          // tableId → {index, running, secondsLeft, warned, ended, startedAt}
+  };
+}
+
+function makeId(p) { return `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`; }
+
+function normalizeName(v) { return String(v || '').trim().replace(/\s+/g, ' '); }
+function upper(v) { return normalizeName(v).toLocaleUpperCase('tr'); }
+
+/* ---------- FİRMA ADI EŞLEŞTİRME ----------
+   Serbest metinle girilen firma adları yazım farkları içerir
+   ("TUSAŞ", "Tusas", "TUSAŞ A.Ş."). Bu yüzden karşılaştırma için
+   agresif bir sadeleştirme yapılır: Türkçe harfler ASCII'ye çevrilir,
+   noktalama ve ticari unvan ekleri atılır. */
+const UNVAN_EKLERI = /\b(a\.?\s?s\.?|ltd|sti|s\.?t\.?i\.?|san|sanayi|tic|ticaret|ve|anonim|limited|sirketi|sirket|holding|grup|group|inc|llc|co)\b/g;
+
+function asciiFold(v) {
+  return String(v || '')
+    .replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g').replace(/[ıİiI]/g, 'i')
+    .replace(/[öÖ]/g, 'o').replace(/[şŞ]/g, 's').replace(/[üÜ]/g, 'u');
+}
+
+/* Karşılaştırma anahtarı — görüntülemede kullanılmaz. */
+function firmaAnahtar(ad) {
+  return asciiFold(String(ad || '').toLocaleLowerCase('tr'))
+    .replace(/[.,\-_/&'"()]/g, ' ')
+    .replace(UNVAN_EKLERI, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/* Levenshtein tabanlı benzerlik oranı (0–1). */
+function benzerlik(a, b) {
+  if (a === b) return 1;
+  if (!a.length || !b.length) return 0;
+  const m = a.length, n = b.length;
+  let onceki = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const simdi = [i];
+    for (let j = 1; j <= n; j++) {
+      simdi[j] = Math.min(onceki[j] + 1, simdi[j - 1] + 1, onceki[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
     }
+    onceki = simdi;
+  }
+  return 1 - onceki[n] / Math.max(m, n);
+}
 
-    function modalKeydownHandler(event) {
-      if (event.key === 'Escape') closeModal();
-    }
+/* Girilen adı resmi firma listesindeki karşılığına çevirir.
+   Sıra: tam eşleşme → kullanıcı onaylı eşleme → ham ad. */
+function esasAd(ad) {
+  const k = firmaAnahtar(ad);
+  if (!k) return normalizeName(ad);
+  const resmi = (state.firms || []).find(f => firmaAnahtar(f) === k);
+  if (resmi) return resmi;
+  const eslesme = state.firmAliases && state.firmAliases[k];
+  if (eslesme) return eslesme;
+  return normalizeName(ad);
+}
 
-    function openModal(options) {
-      const {
-        title = '', message = '', showInput = false, inputValue = '', inputPlaceholder = '',
-        confirmText = 'TAMAM', cancelText = 'VAZGEÇ', danger = false, alertOnly = false, onConfirm = null,
-        extraButtons = [], bodyHtml = '', onOpen = null, wide = false
-      } = options || {};
+/* Ad resmi listede var mı? */
+function listedeVar(ad) {
+  const e = esasAd(ad);
+  return (state.firms || []).some(f => firmaAnahtar(f) === firmaAnahtar(e));
+}
 
-      closeModal();
-      const root = document.getElementById('modalRoot');
-      if (!root) return;
+/* Listede olmayan adlar için en yakın firmayı önerir. */
+function enYakinFirma(ad) {
+  const k = firmaAnahtar(ad);
+  let iyi = null, skor = 0;
+  (state.firms || []).forEach(f => {
+    const s = benzerlik(k, firmaAnahtar(f));
+    if (s > skor) { skor = s; iyi = f; }
+  });
+  return skor >= 0.6 ? { firma: iyi, skor } : null;
+}
 
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.id = 'modalOverlay';
-      overlay.innerHTML = `
-        <div class="modal-box${wide ? ' wide' : ''}" role="dialog" aria-modal="true">
-          <div class="modal-header"><h3>${escapeHtml(title)}</h3></div>
-          <div class="modal-body">
-            ${message ? `<p>${escapeHtml(message)}</p>` : ''}
-            ${showInput ? `<input id="modalInput" type="text" value="${escapeHtml(inputValue)}" placeholder="${escapeHtml(inputPlaceholder)}" autocomplete="off" />` : ''}
-            ${bodyHtml}
-          </div>
-          <div class="modal-actions">
-            ${extraButtons.map((b, i) => `<button type="button" class="${b.className || 'secondary'}" data-extra="${i}">${escapeHtml(b.label)}</button>`).join('')}
-            ${alertOnly ? '' : `<button type="button" class="ghost" id="modalCancel">${escapeHtml(cancelText)}</button>`}
-            <button type="button" class="${danger ? 'red' : ''}" id="modalConfirm">${escapeHtml(confirmText)}</button>
-          </div>
-        </div>
-      `;
-      root.appendChild(overlay);
+/* Taleplerde geçip resmi listede olmayan adlar. */
+function taninmayanAdlar() {
+  const m = new Map();
+  state.requests.forEach(r => [r.from, r.to].forEach(ad => {
+    if (listedeVar(ad)) return;
+    const k = firmaAnahtar(ad);
+    if (!k) return;
+    if (!m.has(k)) m.set(k, { ad: normalizeName(ad), sayi: 0, oneri: enYakinFirma(ad) });
+    m.get(k).sayi++;
+  }));
+  return [...m.values()];
+}
 
-      overlay.addEventListener('mousedown', (event) => { if (event.target === overlay) closeModal(); });
+/* Firma listesi yönetimi */
+function firmaEkleToplu() {
+  const kutu = document.getElementById('firmBox');
+  const gelen = String(kutu?.value || '').split(/[\r\n;]+/).map(normalizeName).filter(Boolean);
+  if (!gelen.length) return;
+  const mevcut = new Set((state.firms || []).map(firmaAnahtar));
+  let eklendi = 0;
+  gelen.forEach(f => { const k = firmaAnahtar(f); if (k && !mevcut.has(k)) { state.firms.push(f); mevcut.add(k); eklendi++; } });
+  state.firms.sort((a, b) => a.localeCompare(b, 'tr'));
+  if (kutu) kutu.value = '';
+  saveState(); render();
+  openModal({ title: 'Firmalar Eklendi', message: `${eklendi} firma eklendi. Toplam ${state.firms.length} firma.` + (gelen.length - eklendi ? ` ${gelen.length - eklendi} tanesi zaten listedeydi.` : ''), alertOnly: true });
+}
 
-      const confirmBtn = document.getElementById('modalConfirm');
-      const cancelBtn = document.getElementById('modalCancel');
-      const input = document.getElementById('modalInput');
+/* Google Apps Script kodu üretir. Kullanıcı bunu script.google.com'a
+   yapıştırıp çalıştırdığında form, sorular, firma seçenekleri ve yanıt
+   tablosu tek seferde oluşur. Elle soru hazırlamaya gerek kalmaz. */
+function formBetigiUret() {
+  const ad = state.eventName || 'B2B Görüşme Talebi';
+  const jsFirmalar = JSON.stringify(state.firms, null, 2).replace(/\n/g, '\n  ');
+  const sureler = ['15 dakika', '20 dakika', '30 dakika'];
+  return `/**
+ * ${ad} — görüşme talep formu oluşturucu
+ * Bu kodu script.google.com'da yeni bir projeye yapıştırıp
+ * "formuOlustur" fonksiyonunu çalıştırın.
+ */
+function formuOlustur() {
+  var firmalar = ${jsFirmalar};
 
-      confirmBtn.addEventListener('click', () => {
-        const value = input ? input.value : true;
-        closeModal();
-        if (onConfirm) onConfirm(value);
+  var form = FormApp.create(${JSON.stringify(ad)});
+  form.setDescription(
+    'Görüşmek istediğiniz firmaları işaretleyin. ' +
+    'Seçtiğiniz her firma için ayrı bir görüşme planlanacaktır.'
+  );
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(false);
+
+  form.addListItem()
+    .setTitle('Talep eden firma')
+    .setChoiceValues(firmalar)
+    .setRequired(true);
+
+  form.addCheckboxItem()
+    .setTitle('Görüşmek istediğiniz firmalar')
+    .setChoiceValues(firmalar)
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('Görüşme süresi')
+    .setChoiceValues(${JSON.stringify(sureler)})
+    .setRequired(true);
+
+  // Yanıtların toplanacağı e-tabloyu oluştur ve bağla
+  var tablo = SpreadsheetApp.create(${JSON.stringify(ad + ' — Yanıtlar')});
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, tablo.getId());
+
+  Logger.log('FORM ADRESİ (QR için): ' + form.getPublishedUrl());
+  Logger.log('YANIT TABLOSU: ' + tablo.getUrl());
+}`;
+}
+
+/* Bir kez yayınlanacak Apps Script web uygulaması. Yayınlandıktan
+   sonra uygulamadaki düğme bu adrese firma listesini gönderir ve
+   form sunucu tarafında oluşturulur — kod kopyalamaya gerek kalmaz. */
+function webAppBetigiUret() {
+  return `/**
+ * B2B form oluşturucu — WEB UYGULAMASI
+ * Bir kez yayınlayın, sonra uygulamadaki düğmeden tetikleyin.
+ *
+ * Yayınlama: Dağıt > Yeni dağıtım > Tür: Web uygulaması
+ *   Yürüten: Ben  |  Erişim: Yalnızca ben
+ * Çıkan /exec adresini uygulamadaki "Form oluşturucu adresi" alanına yapıştırın.
+ */
+function doPost(e) {
+  try {
+    var veri = JSON.parse(e.parameter.veri);
+    var sonuc = formuKur(veri);
+    return cikti(
+      '<h2>Form oluşturuldu</h2>' +
+      '<p><b>Form adresi (QR için):</b><br><a href="' + sonuc.form + '" target="_blank">' + sonuc.form + '</a></p>' +
+      '<p><b>Yanıt tablosu:</b><br><a href="' + sonuc.tablo + '" target="_blank">' + sonuc.tablo + '</a></p>' +
+      '<p>Form adresini kopyalayıp uygulamadaki <b>Google Form adresi</b> alanına yapıştırın.</p>'
+    );
+  } catch (hata) {
+    return cikti('<h2>Hata</h2><pre>' + hata + '</pre>');
+  }
+}
+
+function doGet() {
+  return cikti('<h2>Hazır</h2><p>Bu adres çalışıyor. Formu uygulamadaki düğmeden oluşturun.</p>');
+}
+
+function cikti(html) {
+  return HtmlService.createHtmlOutput(
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<div style="font-family:system-ui;padding:24px;line-height:1.6;max-width:640px">' + html + '</div>'
+  );
+}
+
+function formuKur(veri) {
+  var firmalar = veri.firmalar || [];
+  var ad = veri.ad || 'B2B Görüşme Talebi';
+  var sureler = veri.sureler || ['15 dakika', '20 dakika', '30 dakika'];
+
+  if (!firmalar.length) throw new Error('Firma listesi boş.');
+
+  var form = FormApp.create(ad);
+  form.setDescription(
+    'Görüşmek istediğiniz firmaları işaretleyin. ' +
+    'Seçtiğiniz her firma için ayrı bir görüşme planlanacaktır.'
+  );
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(false);
+
+  form.addListItem().setTitle('Talep eden firma')
+    .setChoiceValues(firmalar).setRequired(true);
+  form.addCheckboxItem().setTitle('Görüşmek istediğiniz firmalar')
+    .setChoiceValues(firmalar).setRequired(true);
+  form.addMultipleChoiceItem().setTitle('Görüşme süresi')
+    .setChoiceValues(sureler).setRequired(true);
+
+  var tablo = SpreadsheetApp.create(ad + ' — Yanıtlar');
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, tablo.getId());
+
+  return { form: form.getPublishedUrl(), tablo: tablo.getUrl() };
+}`;
+}
+
+/* Firma listesini web uygulamasına gönderir. Yeni sekmeye normal bir
+   form gönderimi yapılır; böylece tarayıcılar arası kaynak kısıtı
+   (CORS) sorun çıkarmaz ve sonuç sayfası kullanıcıya gösterilir. */
+function formuOtomatikOlustur() {
+  if (!state.firms.length) {
+    openModal({ title: 'Firma Listesi Boş', message: 'Önce katılımcı firmaları ekleyin.', alertOnly: true });
+    return;
+  }
+  const adres = String(state.webAppUrl || '').trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(adres)) {
+    openModal({
+      title: 'Form Oluşturucu Kurulu Değil',
+      message: 'Tek tıkla form oluşturmak için önce Apps Script web uygulamasını bir kez yayınlamanız gerekiyor. Kurulum adımlarını göstereyim mi?',
+      confirmText: 'KURULUMU GÖSTER',
+      onConfirm: () => webAppKurulum()
+    });
+    return;
+  }
+
+  const f = document.createElement('form');
+  f.method = 'POST';
+  f.action = adres;
+  f.target = '_blank';
+  const alan = document.createElement('input');
+  alan.type = 'hidden';
+  alan.name = 'veri';
+  alan.value = JSON.stringify({ ad: state.eventName || 'B2B Görüşme Talebi', firmalar: state.firms });
+  f.appendChild(alan);
+  document.body.appendChild(f);
+  f.submit();
+  document.body.removeChild(f);
+
+  openModal({
+    title: 'Form Oluşturuluyor',
+    message: 'Yeni sekmede form oluşturuluyor. İşlem bitince orada form adresi görünecek — onu kopyalayıp Ayarlar bölümündeki "Google Form adresi" alanına yapıştırın.',
+    alertOnly: true
+  });
+}
+
+function webAppKurulum() {
+  const kod = webAppBetigiUret();
+  openModal({
+    title: 'Tek Tıkla Form Oluşturma — Kurulum', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      <p class="hint">Bu kurulumu <b>bir kez</b> yapmanız yeterli. Sonrasında her etkinlikte tek düğmeyle form oluşturursunuz.</p>
+      <ol class="hint" style="padding-left:18px;line-height:1.9">
+        <li><b>script.google.com</b> → <b>Yeni proje</b></li>
+        <li>Editördeki her şeyi silin, aşağıdaki kodu yapıştırın, kaydedin</li>
+        <li>Sağ üstte <b>Dağıt</b> → <b>Yeni dağıtım</b></li>
+        <li>Dişli simgesi → <b>Web uygulaması</b>; Yürüten: <b>Ben</b>, Erişim: <b>Yalnızca ben</b></li>
+        <li><b>Dağıt</b> → izinleri onaylayın → çıkan <b>/exec</b> ile biten adresi kopyalayın</li>
+        <li>Aşağıdaki alana yapıştırıp kaydedin</li>
+      </ol>
+      <textarea id="webBox" readonly rows="10" style="font-size:11px">${esc(kod)}</textarea>
+      <div class="row">
+        <button type="button" class="green" id="copyWeb">KODU KOPYALA</button>
+        <span id="webStat" style="font-size:12px;font-weight:600"></span>
+      </div>
+      <div><label for="webUrlIn">Form oluşturucu adresi (/exec ile biter)</label>
+        <input id="webUrlIn" type="url" value="${esc(state.webAppUrl)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <button type="button" class="secondary" id="saveWeb">ADRESİ KAYDET</button>`,
+    onOpen: () => {
+      const kutu = document.getElementById('webBox');
+      const st = document.getElementById('webStat');
+      kutu?.addEventListener('focus', () => kutu.select());
+      document.getElementById('copyWeb').onclick = () => kopyalaSessiz(kod, ok => {
+        st.textContent = ok ? 'Kopyalandı.' : 'Kutuya tıklayıp Ctrl+A, Ctrl+C yapın.';
+        st.style.color = ok ? 'var(--green)' : 'var(--red)';
+        if (!ok) { kutu.focus(); kutu.select(); }
       });
-      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-      overlay.querySelectorAll('[data-extra]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const tanim = extraButtons[Number(btn.dataset.extra)];
-          closeModal();
-          if (tanim && typeof tanim.onClick === 'function') tanim.onClick();
-        });
-      });
-
-      document.addEventListener('keydown', modalKeydownHandler);
-
-      if (input) {
-        input.addEventListener('keydown', (event) => { if (event.key === 'Enter') confirmBtn.click(); });
-        setTimeout(() => { input.focus(); input.select(); }, 0);
-      } else {
-        setTimeout(() => confirmBtn.focus(), 0);
-      }
-
-      if (typeof onOpen === 'function') onOpen(overlay);
-    }
-
-    function makeId(prefix) { return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`; }
-    function clone(value) { return JSON.parse(JSON.stringify(value)); }
-
-    function getMeetingGrid(count) {
-      const c = Math.max(1, Number(count) || 1);
-      const ratio = MEETING_AUTO_AREA.w / MEETING_AUTO_AREA.h;
-      const columns = Math.max(1, Math.ceil(Math.sqrt(c * ratio)));
-      const rows = Math.max(1, Math.ceil(c / columns));
-      return { columns, rows };
-    }
-
-    function getAutoMeetingSize(count) {
-      const c = Math.max(1, Number(count) || 1);
-      const { columns, rows } = getMeetingGrid(c);
-      const gap = 2;
-      const tiers = [
-        { max: 2, w: 40, h: 33 }, { max: 4, w: 33, h: 28 }, { max: 6, w: 28, h: 24 },
-        { max: 9, w: 24, h: 21 }, { max: 12, w: 21, h: 18 }, { max: 16, w: 18, h: 15 },
-        { max: Infinity, w: 15, h: 13 }
-      ];
-      const tier = tiers.find(item => c <= item.max);
-      const maxW = (MEETING_AUTO_AREA.w - gap * (columns + 1)) / columns;
-      const maxH = (MEETING_AUTO_AREA.h - gap * (rows + 1)) / rows;
-      const w = Math.max(7, Math.min(tier.w, maxW));
-      const h = Math.max(6, Math.min(tier.h, maxH));
-      return { w: Math.round(w * 10) / 10, h: Math.round(h * 10) / 10 };
-    }
-
-    function getAutoMeetingPosition(index, count) {
-      const c = Math.max(1, Number(count) || 1);
-      const { columns, rows } = getMeetingGrid(c);
-      const size = getAutoMeetingSize(c);
-      const col = index % columns;
-      const row = Math.floor(index / columns);
-      const cellW = MEETING_AUTO_AREA.w / columns;
-      const cellH = MEETING_AUTO_AREA.h / rows;
-      const x = snap(MEETING_AUTO_AREA.x + col * cellW + Math.max(0, (cellW - size.w) / 2));
-      const y = snap(MEETING_AUTO_AREA.y + row * cellH + Math.max(0, (cellH - size.h) / 2));
-      return {
-        x: clampPercent(x, MEETING_AUTO_AREA.x, MEETING_AUTO_AREA.x, MEETING_AUTO_AREA.x + MEETING_AUTO_AREA.w - size.w),
-        y: clampPercent(y, MEETING_AUTO_AREA.y, MEETING_AUTO_AREA.y, MEETING_AUTO_AREA.y + MEETING_AUTO_AREA.h - size.h)
-      };
-    }
-
-    function applyAutoMeetingSizing(currentState = state) {
-      if (!currentState || !Array.isArray(currentState.tables)) return;
-      const meetings = currentState.tables.filter(table => table.kind === 'meeting');
-      const meetingCount = meetings.length;
-      if (!meetingCount) return;
-      const size = getAutoMeetingSize(meetingCount);
-
-      const needsRelayout = currentState.layoutCount !== meetingCount;
-
-      meetings.forEach((table, index) => {
-        table.w = size.w;
-        table.h = size.h;
-        if (needsRelayout) {
-          const position = getAutoMeetingPosition(index, meetingCount);
-          table.x = position.x;
-          table.y = position.y;
-        }
-        table.x = clampPercent(Number(table.x), MEETING_AUTO_AREA.x, MEETING_AUTO_AREA.x, MEETING_AUTO_AREA.x + MEETING_AUTO_AREA.w - table.w);
-        table.y = clampPercent(Number(table.y), MEETING_AUTO_AREA.y, MEETING_AUTO_AREA.y, MEETING_AUTO_AREA.y + MEETING_AUTO_AREA.h - table.h);
-      });
-
-      currentState.layoutCount = meetingCount;
-    }
-
-    function defaultState() {
-      return {
-        version: 3, selectedId: 'm1', participants: [], startTime: '09:00', fixedClocks: {},
-        tables: [
-          {
-            id: 'm1', kind: 'meeting', title: 'MASA - 1', shape: 'rect',
-            x: 20, y: 38, w: 22, h: 19, onceki: '', firma: '', saniye: DEFAULT_SECONDS,
-            running: false, duration: 15, updatedAt: Date.now(), queue: []
-          },
-          {
-            id: 'm2', kind: 'meeting', title: 'MASA - 2', shape: 'rect',
-            x: 58, y: 38, w: 22, h: 19, onceki: '', firma: '', saniye: DEFAULT_SECONDS,
-            running: false, duration: 15, updatedAt: Date.now(), queue: []
-          }
-        ]
-      };
-    }
-
-    function migrateLegacy(raw) {
-      const fallback = defaultState();
-      if (!raw || typeof raw !== 'object') return fallback;
-      if (Array.isArray(raw.tables)) return raw;
-
-      const tables = [];
-      ['m1', 'm2'].forEach((id, index) => {
-        const legacy = raw[id] || {};
-        const fb = fallback.tables[index];
-        const queue = [];
-        if (typeof legacy.siradaki === 'string' && legacy.siradaki.trim()) queue.push(legacy.siradaki.trim());
-        tables.push({
-          ...fb, onceki: typeof legacy.onceki === 'string' ? legacy.onceki : fb.onceki,
-          firma: typeof legacy.firma === 'string' ? legacy.firma : fb.firma,
-          saniye: Number.isFinite(Number(legacy.saniye)) ? Math.floor(Number(legacy.saniye)) : fb.saniye,
-          running: Boolean(legacy.running),
-          duration: Number.isFinite(Number(legacy.saniye)) ? Math.max(1, Math.ceil(Math.abs(Number(legacy.saniye)) / 60) || 15) : 15,
-          updatedAt: Date.now(), queue
-        });
-      });
-      return { version: 3, selectedId: 'm1', participants: [], tables };
-    }
-
-    function normalizeParticipant(item) {
-      if (typeof item === 'string') return { id: makeId('p'), name: item.trim(), clock: null };
-      return {
-        id: typeof item?.id === 'string' ? item.id : makeId('p'),
-        name: typeof item?.name === 'string' ? item.name.trim() : '',
-        // Excel'den gelen sabit görüşme saati; yoksa sıraya göre hesaplanır.
-        clock: /^\d{2}:\d{2}$/.test(String(item?.clock || '')) ? item.clock : null
-      };
-    }
-
-    function normalizeMeeting(table, fallback, index) {
-      const seconds = Number.isFinite(Number(table?.saniye)) ? Math.floor(Number(table.saniye)) : fallback.saniye;
-      const duration = Number.isFinite(Number(table?.duration)) ? Math.max(1, Number(table.duration)) : Math.max(1, Math.ceil(Math.abs(seconds) / 60) || 15);
-      const queue = Array.isArray(table?.queue) ? table.queue.map(String).map(v => v.trim()).filter(Boolean) : [];
-      if (typeof table?.siradaki === 'string' && table.siradaki.trim() && !queue.includes(table.siradaki.trim())) {
-        queue.push(table.siradaki.trim());
-      }
-      return {
-        id: typeof table?.id === 'string' ? table.id : makeId('m'),
-        kind: 'meeting', title: typeof table?.title === 'string' && table.title.trim() ? table.title.trim() : `MASA - ${index + 1}`,
-        shape: 'rect', x: clampPercent(Number(table?.x), fallback.x, 0, 100 - fallback.w),
-        y: clampPercent(Number(table?.y), fallback.y, 0, 100 - fallback.h), w: clampPercent(Number(table?.w), fallback.w, 8, 46),
-        h: clampPercent(Number(table?.h), fallback.h, 8, 36), onceki: typeof table?.onceki === 'string' ? table.onceki : '',
-        firma: typeof table?.firma === 'string' ? table.firma : '', saniye: seconds, running: Boolean(table?.running),
-        duration, updatedAt: Number.isFinite(Number(table?.updatedAt)) ? Number(table.updatedAt) : Date.now(), queue
-      };
-    }
-
-    function normalizeState(raw) {
-      const migrated = migrateLegacy(raw);
-      const fallback = defaultState();
-      const tables = [];
-
-      (Array.isArray(migrated.tables) ? migrated.tables : []).forEach((table, index) => {
-        if (table?.kind === 'shape') {
-          tables.push({
-            id: typeof table.id === 'string' ? table.id : makeId('s'), kind: 'shape', shape: table.shape === 'circle' ? 'circle' : 'rect',
-            text: typeof table.text === 'string' ? table.text : 'Yeni Alan',
-            bgColor: typeof table.bgColor === 'string' ? table.bgColor : '#E6EAF2', textColor: typeof table.textColor === 'string' ? table.textColor : '#1B2230',
-            x: clampPercent(Number(table.x), 10 + (index * 5) % 50, 0, 90), y: clampPercent(Number(table.y), 10 + (index * 5) % 50, 0, 90),
-            w: clampPercent(Number(table.w), 12, 2, 100), h: clampPercent(Number(table.h), 8, 2, 100),
-          });
+      document.getElementById('saveWeb').onclick = () => {
+        const v = String(document.getElementById('webUrlIn').value || '').trim();
+        if (v && !/\/exec$/.test(v)) {
+          openModal({ title: 'Adres Hatalı', message: 'Adres /exec ile bitmeli. Dağıtım ekranındaki "Web uygulaması URL" değerini kopyalayın.', alertOnly: true });
           return;
         }
-        if (table?.kind === 'note') return;
-        const fb = fallback.tables[index] || { ...fallback.tables[0], id: makeId('m'), title: `MASA - ${index + 1}`, x: 10 + ((index * 18) % 70), y: 34 + (Math.floor(index / 4) * 22) };
-        tables.push(normalizeMeeting(table, fb, index));
-      });
-
-      // Salon bilinçli olarak boşaltılmış olabilir (yerleşimi sıfırlama).
-      // Bu yüzden masa yoksa varsayılanlar geri eklenmez; yalnızca hiç
-      // kayıt yokken defaultState devreye girer.
-      const participants = (Array.isArray(migrated.participants) ? migrated.participants : []).map(normalizeParticipant).filter(p => p.name);
-      const selected = typeof migrated.selectedId === 'string' && tables.some(t => t.id === migrated.selectedId) ? migrated.selectedId : tables[0]?.id;
-
-      const layoutCount = Number.isFinite(Number(migrated.layoutCount)) ? Number(migrated.layoutCount) : undefined;
-      const startTime = /^\d{2}:\d{2}$/.test(String(migrated.startTime || '')) ? migrated.startTime : '09:00';
-      // Firma adına bağlı sabit görüşme saatleri; katılımcı masaya
-      // taşındıktan sonra da saatinin korunmasını sağlar.
-      const fixedClocks = {};
-      const hamSaatler = migrated.fixedClocks;
-      if (hamSaatler && typeof hamSaatler === 'object') {
-        Object.keys(hamSaatler).forEach(ad => {
-          if (/^\d{2}:\d{2}$/.test(String(hamSaatler[ad] || ''))) fixedClocks[ad] = hamSaatler[ad];
-        });
-      }
-      participants.forEach(p => { if (p.clock) fixedClocks[p.name] = p.clock; });
-      const normalizedState = { version: 3, selectedId: selected, participants, tables, layoutCount, startTime, fixedClocks };
-      applyAutoMeetingSizing(normalizedState);
-      return normalizedState;
-    }
-
-    function clampPercent(value, fallback, min, max) { return Math.min(max, Math.max(min, Number.isFinite(value) ? value : fallback)); }
-
-    function materializeTimers(currentState) {
-      const now = Date.now();
-      let changed = false;
-      currentState.tables.forEach((table) => {
-        if (table.kind !== 'meeting' || !table.running) return;
-        const updatedAt = Number.isFinite(Number(table.updatedAt)) ? Number(table.updatedAt) : now;
-        const elapsed = Math.floor((now - updatedAt) / 1000);
-        if (elapsed > 0) {
-          table.saniye -= elapsed;
-          table.updatedAt = updatedAt + elapsed * 1000;
-          changed = true;
-        }
-      });
-      return changed;
-    }
-
-    function loadState(persistMaterialized = false) {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const normalized = raw ? normalizeState(JSON.parse(raw)) : defaultState();
-        const changed = materializeTimers(normalized);
-        if (!raw || (changed && persistMaterialized)) writeState(normalized);
-        return normalized;
-      } catch (error) {
-        const initialState = defaultState();
-        try { writeState(initialState); } catch (e) { /* depolama yok */ }
-        return initialState;
-      }
-    }
-
-    function writeState(nextState = state) {
-      applyAutoMeetingSizing(nextState);
-      // Gizli sekme veya depolama izni kapalıysa setItem hata fırlatır.
-      // Bu durumda uygulama bellekte çalışmayı sürdürür, sadece kayıt olmaz.
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-      } catch (error) {
-        if (!writeState.uyarildi) {
-          writeState.uyarildi = true;
-          console.warn('Tarayıcı yerel kayda izin vermiyor; veriler bu sekme kapanınca silinir.');
-        }
-      }
-    }
-
-    function saveState() {
-      materializeTimers(state);
-      if (!state.tables.some(t => t.id === selectedId)) selectedId = firstTableId();
-      state.selectedId = selectedId;
-      writeState(state);
-    }
-
-    function firstTableId() { return state?.tables?.[0]?.id || null; }
-    function getRoute() { return window.location.hash.toLowerCase() === '#takip' ? 'takip' : 'kontrol'; }
-
-    function escapeHtml(value) {
-      return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-    }
-    function displayValue(value) {
-      const text = String(value ?? '').trim();
-      return text ? escapeHtml(text) : '<span class="empty-text">—</span>';
-    }
-
-    function renderQueuePreview(table) {
-      const items = Array.isArray(table?.queue) ? table.queue.slice(0, 3) : [];
-      if (!items.length) return '<li class="empty-queue">Sırada firma yok</li>';
-      return items.map((name, index) => `<li title="${escapeHtml(name)}"><span>${index + 1}</span>${escapeHtml(name)}</li>`).join('');
-    }
-
-    /* ------------------------------------------------------------
-       GÖRÜŞME SAATİ HESABI
-       Etkinlik "tur" mantığıyla ilerler: N toplantı masası varsa her
-       turda N firma aynı anda görüşür. Bir turun uzunluğu masanın
-       görüşme süresidir. Buradaki saatler bu varsayıma göre hesaplanan
-       tahmini saatlerdir.
-       ------------------------------------------------------------ */
-    function getStartMinutes() {
-      const parts = String(state?.startTime || '09:00').split(':');
-      const h = Number(parts[0]), m = Number(parts[1]);
-      if (!Number.isFinite(h) || !Number.isFinite(m)) return 9 * 60;
-      return h * 60 + m;
-    }
-
-    function formatClock(totalMinutes) {
-      const wrapped = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
-      const h = Math.floor(wrapped / 60);
-      const m = wrapped % 60;
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    }
-
-    function getMeetingTables() {
-      return state.tables.filter(t => t.kind === 'meeting');
-    }
-
-    // Bir masadaki belirli tur numarasının başlangıç saati.
-    // tur 0 = masada şu an görüşülen firma.
-    // Firma için Excel'den gelen sabit saat varsa onu, yoksa null döner.
-    function getFixedClock(name) {
-      const ad = String(name || '').trim();
-      return (ad && state.fixedClocks && state.fixedClocks[ad]) || null;
-    }
-
-    function getTableSlotClock(table, round) {
-      return formatClock(getStartMinutes() + round * (Number(table.duration) || 15));
-    }
-
-    // Katılımcı sütunundaki bir kişinin tahmini görüşme saati.
-    // Sütundakiler, masalardaki mevcut sıralar bittikten sonra
-    // tur tur dağıtılır.
-    function getParticipantClock(index) {
-      const tables = getMeetingTables();
-      const tableCount = tables.length || 1;
-      const busiestQueue = tables.reduce((max, t) => Math.max(max, t.queue.length), 0);
-      const referenceDuration = Number(tables[0]?.duration) || 15;
-      const round = busiestQueue + 1 + Math.floor(index / tableCount);
-      return formatClock(getStartMinutes() + round * referenceDuration);
-    }
-
-    function formatTime(totalSeconds) {
-      const numeric = Math.floor(Number(totalSeconds) || 0);
-      const sign = numeric < 0 ? '-' : '';
-      const abs = Math.abs(numeric);
-      return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
-    }
-
-    function getTimeColor(seconds) {
-      const value = Number(seconds) || 0;
-      if (value > 180) return '#3FB950';
-      if (value >= 60) return '#D29922';
-      return '#F85149';
-    }
-
-    function getTable(id) { return state.tables.find(table => table.id === id); }
-    function getSelectedTable() { return getTable(selectedId) || state.tables[0]; }
-
-    function renderControlPanel() {
-      document.body.classList.remove('follow-mode');
-      stopTitleBlink();
-      startTicking();
-
-      const previousScroll = {
-        page: window.scrollY,
-        panel: document.querySelector('.selected-panel .panel-body')?.scrollTop || 0,
-        sheet: document.getElementById('participantSheet')?.scrollTop || 0,
-        queue: document.getElementById('queueList')?.scrollTop || 0
+        state.webAppUrl = v; saveState(); closeModal(); render();
       };
+    }
+  });
+}
 
-      state = loadState(true);
-      selectedId = state.selectedId || selectedId || firstTableId();
+function formBetigiGoster() {
+  if (!state.firms.length) {
+    openModal({ title: 'Firma Listesi Boş', message: 'Önce katılımcı firmaları ekleyin; betik listeyi içine gömecek.', alertOnly: true });
+    return;
+  }
+  const kod = formBetigiUret();
+  openModal({
+    title: 'Formu Otomatik Oluştur', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      <p class="hint">Aşağıdaki kod, ${state.firms.length} firmanızı içeren formu ve yanıt tablosunu tek seferde oluşturur. Elle soru hazırlamanıza gerek yok.</p>
+      <ol class="hint" style="padding-left:18px;line-height:1.8">
+        <li><b>script.google.com</b> → <b>Yeni proje</b></li>
+        <li>Editördeki her şeyi silin, aşağıdaki kodu yapıştırın</li>
+        <li>Üstteki <b>▶ Çalıştır</b> düğmesine basın (ilk seferde izin isteyecek, onaylayın)</li>
+        <li>Alttaki <b>Yürütme günlüğü</b>nde form adresi ve tablo bağlantısı görünecek</li>
+      </ol>
+      <textarea id="scriptBox" readonly rows="12" style="font-size:11px">${esc(kod)}</textarea>
+      <div class="row">
+        <button type="button" class="green" id="copyScript">KODU KOPYALA</button>
+        <button type="button" class="secondary" id="dlScript">DOSYA OLARAK İNDİR</button>
+        <span id="scriptStat" style="font-size:12px;font-weight:600"></span>
+      </div>
+      <p class="hint">Firma listesi değişirse betiği yeniden üretip çalıştırın — yeni bir form oluşturur.</p>`,
+    onOpen: () => {
+      const kutu = document.getElementById('scriptBox');
+      const st = document.getElementById('scriptStat');
+      kutu?.addEventListener('focus', () => kutu.select());
+      document.getElementById('copyScript').onclick = () => {
+        kopyalaSessiz(kod, ok => {
+          st.textContent = ok ? 'Kopyalandı.' : 'Kopyalanamadı — kutuya tıklayıp Ctrl+A, Ctrl+C yapın.';
+          st.style.color = ok ? 'var(--green)' : 'var(--red)';
+          if (!ok) { kutu.focus(); kutu.select(); }
+        });
+      };
+      document.getElementById('dlScript').onclick = () => {
+        indirDosya(kod, 'form-olustur.gs', 'text/plain;charset=utf-8');
+        st.textContent = 'İndirildi.'; st.style.color = 'var(--green)';
+      };
+    }
+  });
+}
 
-      document.getElementById('app').innerHTML = `
-        <main class="app-shell">
-          <section class="topbar">
-            <div><h1>B2B Toplantı Yönetim Sistemi</h1></div>
-            <div class="top-actions">
-              <button type="button" onclick="openFollowScreen()">TAKİP EKRANINI AÇ</button>
-              <button type="button" class="secondary" onclick="openShareDialog()">PLANI PAYLAŞ</button>
-              <button type="button" class="secondary" onclick="resetAllConfirm()">SIFIRLA</button>
+function kopyalaSessiz(metin, sonuc) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(metin).then(() => sonuc(true)).catch(() => sonuc(false));
+    return;
+  }
+  try {
+    const a = document.createElement('textarea');
+    a.value = metin; a.style.position = 'fixed'; a.style.top = '-1000px';
+    document.body.appendChild(a); a.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(a); sonuc(ok);
+  } catch (e) { sonuc(false); }
+}
+
+function firmaSil(ad) {
+  state.firms = state.firms.filter(f => f !== ad);
+  saveState(); render();
+}
+
+function firmaListesiniTemizle() {
+  openModal({ title: 'Firma Listesini Temizle', message: 'Tüm katılımcı firmalar silinsin mi? Talepler etkilenmez.', confirmText: 'TEMİZLE', danger: true,
+    onConfirm: () => { state.firms = []; saveState(); render(); } });
+}
+
+/* Google Forms açılır listesine yapıştırmak üzere listeyi kopyalar. */
+function firmaListesiniKopyala() {
+  if (!state.firms.length) { openModal({ title: 'Liste Boş', message: 'Önce firmaları ekleyin.', alertOnly: true }); return; }
+  kopyala(state.firms.join('\n'));
+}
+
+/* Tanınmayan bir adı, seçilen resmi firmaya bağlar. */
+function adiEsle(hamAd, hedefFirma) {
+  state.firmAliases = state.firmAliases || {};
+  state.firmAliases[firmaAnahtar(hamAd)] = hedefFirma;
+  saveState(); render();
+}
+
+function adiFirmaYap(hamAd) {
+  const ad = normalizeName(hamAd);
+  if (!ad) return;
+  if (!state.firms.some(f => firmaAnahtar(f) === firmaAnahtar(ad))) state.firms.push(ad);
+  state.firms.sort((a, b) => a.localeCompare(b, 'tr'));
+  saveState(); render();
+}
+
+/* Taleplerde geçen tüm firmaları, esas adlarına göre sayar. */
+function firmaListesi() {
+  const m = new Map();
+  state.requests.forEach(r => {
+    [r.from, r.to].forEach(ad => {
+      const e = esasAd(ad);
+      const k = upper(e);
+      if (!m.has(k)) m.set(k, { ad: e, sayi: 0, varyantlar: new Set() });
+      const kayit = m.get(k);
+      kayit.sayi++;
+      if (normalizeName(ad) !== e) kayit.varyantlar.add(normalizeName(ad));
+    });
+  });
+  return [...m.values()].sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
+}
+
+/* Birbirine benzeyen ama henüz birleştirilmemiş adları bulur. */
+function benzerGruplar(esik = 0.82) {
+  const adlar = firmaListesi().map(f => f.ad);
+  const anahtarlar = adlar.map(firmaAnahtar);
+  const kullanildi = new Set();
+  const gruplar = [];
+  for (let i = 0; i < adlar.length; i++) {
+    if (kullanildi.has(i)) continue;
+    const grup = [adlar[i]];
+    for (let j = i + 1; j < adlar.length; j++) {
+      if (kullanildi.has(j)) continue;
+      const bir = anahtarlar[i], iki = anahtarlar[j];
+      const yakin = bir === iki || benzerlik(bir, iki) >= esik ||
+                    (bir.length > 3 && iki.length > 3 && (bir.startsWith(iki) || iki.startsWith(bir)));
+      if (yakin) { grup.push(adlar[j]); kullanildi.add(j); }
+    }
+    if (grup.length > 1) { kullanildi.add(i); gruplar.push(grup); }
+  }
+  return gruplar;
+}
+
+/* Bir grubu tek bir esas ada bağlar. */
+function firmalariBirlestir(adlar, esas) {
+  state.firmAliases = state.firmAliases || {};
+  adlar.forEach(a => { state.firmAliases[firmaAnahtar(a)] = esas; });
+  saveState();
+}
+
+function parseClock(v) {
+  const m = String(v || '').trim().match(/^(\d{1,2})[:.](\d{2})/);
+  if (!m) return null;
+  const h = Number(m[1]), mi = Number(m[2]);
+  if (h > 23 || mi > 59) return null;
+  return h * 60 + mi;
+}
+function fmtClock(mins) {
+  const w = ((Math.round(mins) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(w / 60)).padStart(2, '0')}:${String(w % 60).padStart(2, '0')}`;
+}
+function fmtCounter(sec) {
+  const neg = sec < 0;
+  const a = Math.abs(Math.floor(sec));
+  return `${neg ? '-' : ''}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`;
+}
+function esc(v) {
+  return String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+function normalizeState(raw) {
+  const d = defaultState();
+  const s = (raw && typeof raw === 'object') ? raw : {};
+  const tables = Array.isArray(s.tables) && s.tables.length
+    ? s.tables.map((t, i) => ({ id: typeof t?.id === 'string' ? t.id : makeId('t'), title: normalizeName(t?.title) || `MASA ${i + 1}` }))
+    : d.tables;
+  const requests = (Array.isArray(s.requests) ? s.requests : []).map((r, i) => ({
+    id: typeof r?.id === 'string' ? r.id : makeId('r'),
+    from: normalizeName(r?.from), to: normalizeName(r?.to),
+    duration: Math.max(1, Number(r?.duration) || 15),
+    order: Number.isFinite(Number(r?.order)) ? Number(r.order) : i,
+    createdAt: r?.createdAt || ''
+  })).filter(r => r.from && r.to);
+
+  return {
+    version: 1,
+    eventName: normalizeName(s.eventName),
+    formUrl: String(s.formUrl || '').trim(),
+    webAppUrl: String(s.webAppUrl || '').trim(),
+    qrImage: typeof s.qrImage === 'string' && s.qrImage.startsWith('data:image') ? s.qrImage : '',
+    priorityMode: s.priorityMode === 'fifo' ? 'fifo' : 'puan',
+    weights: {
+      ilkGorusme: Number.isFinite(Number(s.weights?.ilkGorusme)) ? Number(s.weights.ilkGorusme) : 22,
+      sure: Number.isFinite(Number(s.weights?.sure)) ? Number(s.weights.sure) : 6,
+      yogunluk: Number.isFinite(Number(s.weights?.yogunluk)) ? Number(s.weights.yogunluk) : 2.5,
+      karsilikli: Number.isFinite(Number(s.weights?.karsilikli)) ? Number(s.weights.karsilikli) : 14
+    },
+    firms: Array.isArray(s.firms) ? [...new Set(s.firms.map(normalizeName).filter(Boolean))] : [],
+    firmAliases: (s.firmAliases && typeof s.firmAliases === 'object') ? s.firmAliases : {},
+    startTime: /^\d{2}:\d{2}$/.test(String(s.startTime || '')) ? s.startTime : d.startTime,
+    endTime: /^\d{2}:\d{2}$/.test(String(s.endTime || '')) ? s.endTime : d.endTime,
+    defaultDuration: Math.max(1, Number(s.defaultDuration) || 15),
+    tables,
+    requests,
+    schedule: Array.isArray(s.schedule) ? s.schedule : [],
+    unscheduled: Array.isArray(s.unscheduled) ? s.unscheduled : [],
+    live: (s.live && typeof s.live === 'object') ? s.live : {}
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? normalizeState(JSON.parse(raw)) : defaultState();
+  } catch (e) { return defaultState(); }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.warn('Yerel kayıt yapılamadı'); }
+}
+
+/* ---------- 2) PLANLAMA MOTORU ---------- */
+
+function pairKey(a, b) { return [upper(a), upper(b)].sort().join(' ||| '); }
+
+/* Karşılıklı ve yinelenen talepleri tek görüşmeye indirger.
+   En erken talep sırası korunur, süre olarak en uzunu alınır. */
+function mergeRequests(requests) {
+  const map = new Map();
+  requests.forEach((req, i) => {
+    // Kullanıcının onayladığı birleştirmeler burada uygulanır ki
+    // aynı firmanın yazım varyantları tek firma sayılsın.
+    const from = esasAd(req.from), to = esasAd(req.to);
+    if (!from || !to || upper(from) === upper(to)) return;
+    const key = pairKey(from, to);
+    const dur = Math.max(1, Number(req.duration) || 15);
+    const ord = Number.isFinite(Number(req.order)) ? Number(req.order) : i;
+    const cur = map.get(key);
+    if (!cur) { map.set(key, { id: req.id, from, to, duration: dur, order: ord, mutual: false }); return; }
+    cur.duration = Math.max(cur.duration, dur);
+    cur.order = Math.min(cur.order, ord);
+    cur.mutual = true;
+  });
+  return [...map.values()].sort((a, b) => a.order - b.order);
+}
+
+const overlaps = (s1, e1, s2, e2) => s1 < e2 && s2 < e1;
+const isFree = (list, s, e) => !list.some(iv => overlaps(s, e, iv.start, iv.end));
+
+/* ---------- PUANLAMA ----------
+   Talepler sabit bir sırayla değil, her adımda yeniden hesaplanan
+   önceliğe göre yerleştirilir. Böylece bir firma görüşme aldıkça
+   sonraki talepleri geriye düşer ve herkes önce bir tur alır. */
+function talepPuani(is, atanan, talepSayisi, agirlik) {
+  const a = atanan[upper(is.from)] || 0;
+  const b = atanan[upper(is.to)] || 0;
+  const yogunluk = talepSayisi[upper(is.from)] || 1;
+
+  let p = 100;
+  p -= agirlik.ilkGorusme * Math.min(a, 6);      // talep eden zaten görüşme aldıysa
+  p -= agirlik.ilkGorusme * Math.min(b, 6) * 0.6; // hedef firma doluysa (daha hafif)
+  p -= agirlik.sure * (is.duration / 15);         // uzun görüşme biraz geride
+  p -= agirlik.yogunluk * Math.min(yogunluk, 12); // çok talep atan firma biraz geride
+  if (is.mutual) p += agirlik.karsilikli;         // iki taraf da istiyorsa öne
+  p -= is.order * 0.02;                           // eşitlikte önce talep eden kazanır
+  return p;
+}
+
+/* İki firmanın ve bir masanın aynı anda boş olduğu en erken anı bulur. */
+function buildSchedule() {
+  const startM = parseClock(state.startTime) ?? 540;
+  const endM = parseClock(state.endTime) ?? 1080;
+  const tables = state.tables;
+  const agirlik = state.weights || defaultState().weights;
+  const puanli = state.priorityMode !== 'fifo';
+
+  let bekleyen = mergeRequests(state.requests);
+
+  // Her firmanın kaç talep attığı (yoğunluk cezası için)
+  const talepSayisi = {};
+  bekleyen.forEach(is => { const k = upper(is.from); talepSayisi[k] = (talepSayisi[k] || 0) + 1; });
+
+  const firmaBusy = new Map();
+  const masaBusy = new Map();
+  const atanan = {};
+  tables.forEach(t => masaBusy.set(t.id, []));
+  const busyOf = (ad) => {
+    const k = upper(ad);
+    if (!firmaBusy.has(k)) firmaBusy.set(k, []);
+    return firmaBusy.get(k);
+  };
+
+  const scheduled = [], unscheduled = [];
+
+  while (bekleyen.length) {
+    // Sıradaki işi seç: puanlı modda en yüksek puan, FIFO'da ilk talep
+    let secilen = 0;
+    if (puanli) {
+      let enIyi = -Infinity;
+      bekleyen.forEach((is, idx) => {
+        const p = talepPuani(is, atanan, talepSayisi, agirlik);
+        if (p > enIyi) { enIyi = p; secilen = idx; }
+      });
+    }
+    const is = bekleyen.splice(secilen, 1)[0];
+    is.puan = puanli ? Math.round(talepPuani(is, atanan, talepSayisi, agirlik) * 10) / 10 : null;
+
+    const aB = busyOf(is.from), bB = busyOf(is.to), sure = is.duration;
+
+    const adaylar = new Set([startM]);
+    [...aB, ...bB].forEach(iv => adaylar.add(iv.end));
+    masaBusy.forEach(l => l.forEach(iv => adaylar.add(iv.end)));
+    const sirali = [...adaylar].filter(t => t >= startM).sort((x, y) => x - y);
+
+    let ok = false;
+    for (const bas of sirali) {
+      const bit = bas + sure;
+      if (bit > endM) break;
+      if (!isFree(aB, bas, bit) || !isFree(bB, bas, bit)) continue;
+      const uygun = tables.filter(t => isFree(masaBusy.get(t.id), bas, bit))
+        .sort((x, y) => masaBusy.get(x.id).length - masaBusy.get(y.id).length);
+      if (!uygun.length) continue;
+      const masa = uygun[0];
+      scheduled.push({ id: is.id, from: is.from, to: is.to, duration: sure, mutual: is.mutual,
+                       puan: is.puan, tableId: masa.id, tableTitle: masa.title, start: bas, end: bit });
+      aB.push({ start: bas, end: bit }); bB.push({ start: bas, end: bit });
+      masaBusy.get(masa.id).push({ start: bas, end: bit });
+      atanan[upper(is.from)] = (atanan[upper(is.from)] || 0) + 1;
+      atanan[upper(is.to)] = (atanan[upper(is.to)] || 0) + 1;
+      ok = true; break;
+    }
+    if (!ok) unscheduled.push({ ...is, reason: 'Etkinlik saatleri içinde uygun boşluk yok' });
+  }
+
+  scheduled.sort((a, b) => a.start - b.start || String(a.tableTitle).localeCompare(String(b.tableTitle), 'tr'));
+  state.schedule = scheduled;
+  state.unscheduled = unscheduled;
+  state.live = {};
+  state.tables.forEach(t => { state.live[t.id] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false }; });
+  saveState();
+}
+
+function tableMeetings(tableId) { return state.schedule.filter(s => s.tableId === tableId); }
+function liveOf(tableId) {
+  if (!state.live[tableId]) state.live[tableId] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false };
+  return state.live[tableId];
+}
+function currentMeeting(tableId) { return tableMeetings(tableId)[liveOf(tableId).index] || null; }
+function nextMeeting(tableId) { return tableMeetings(tableId)[liveOf(tableId).index + 1] || null; }
+
+/* ---------- 3) SESLİ ANONS ---------- */
+
+function konus(metin) {
+  if (!sesAcik || !('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(metin);
+    u.lang = 'tr-TR'; u.rate = 0.95; u.volume = 1;
+    speechSynthesis.speak(u);
+  } catch (e) { /* ses yoksa sessizce geç */ }
+}
+
+function sesiAc() {
+  if (!('speechSynthesis' in window)) {
+    openModal({ title: 'Ses Desteklenmiyor', message: 'Bu tarayıcı sesli anonsu desteklemiyor. Chrome veya Edge kullanmayı deneyin.', alertOnly: true });
+    return;
+  }
+  sesAcik = true;
+  // Tarayıcılar ilk konuşmayı kullanıcı etkileşimine bağlar; burada tetikleniyor.
+  konus('Sesli anons etkinleştirildi.');
+  render();
+}
+
+/* ---------- 4) SAYAÇ VE ANONSLAR ---------- */
+
+function startTicking() {
+  if (tickTimer) return;
+  tickTimer = setInterval(() => {
+    let degisti = false;
+    state.tables.forEach(t => {
+      const L = liveOf(t.id);
+      if (!L.running) return;
+      L.secondsLeft -= 1;
+      degisti = true;
+
+      const m = currentMeeting(t.id);
+      if (!m) return;
+
+      if (!L.warned && L.secondsLeft <= 60 && L.secondsLeft > 0) {
+        L.warned = true;
+        konus(`${t.title}. ${m.from} ve ${m.to} firmaları, sürenizin dolmasına 1 dakika kalmıştır.`);
+      }
+      if (!L.ended && L.secondsLeft <= 0) {
+        L.ended = true;
+        L.running = false;
+        const n = nextMeeting(t.id);
+        let metin = `${t.title}. ${m.from} ve ${m.to} firmalarının görüşme süresi dolmuştur.`;
+        if (n) metin += ` Sırada ${n.from} ve ${n.to} firmaları var. Lütfen ${t.title} masasına geçiniz.`;
+        konus(metin);
+      }
+    });
+    if (degisti) { saveState(); refreshCounters(); }
+  }, 1000);
+}
+
+function baslat(tableId) {
+  const L = liveOf(tableId), m = currentMeeting(tableId);
+  if (!m) return;
+  if (L.secondsLeft <= 0 || L.ended) { L.secondsLeft = m.duration * 60; L.warned = false; L.ended = false; }
+  L.running = true;
+  saveState(); render();
+}
+function durdur(tableId) { liveOf(tableId).running = false; saveState(); render(); }
+function sifirla(tableId) {
+  const L = liveOf(tableId), m = currentMeeting(tableId);
+  L.secondsLeft = m ? m.duration * 60 : 0; L.warned = false; L.ended = false; L.running = false;
+  saveState(); render();
+}
+function sonraki(tableId) {
+  const L = liveOf(tableId), list = tableMeetings(tableId);
+  if (L.index >= list.length - 1) { L.index = list.length; L.running = false; L.secondsLeft = 0; saveState(); render(); return; }
+  L.index += 1;
+  const m = currentMeeting(tableId);
+  L.secondsLeft = m ? m.duration * 60 : 0;
+  L.warned = false; L.ended = false; L.running = false;
+  saveState(); render();
+}
+
+function renkOf(sec, running) {
+  if (sec <= 0) return 'var(--red)';
+  if (sec <= 60) return 'var(--yellow)';
+  return running ? 'var(--green)' : 'var(--gray)';
+}
+
+/* Sayaç yazılarını tam yeniden çizim yapmadan günceller. */
+function refreshCounters() {
+  state.tables.forEach(t => {
+    const L = liveOf(t.id);
+    const el = document.querySelector(`[data-timer="${t.id}"]`);
+    if (el) { el.textContent = fmtCounter(L.secondsLeft); el.style.color = renkOf(L.secondsLeft, L.running); }
+    const card = document.querySelector(`[data-card="${t.id}"]`);
+    if (card) {
+      card.classList.toggle('running', L.running && L.secondsLeft > 60);
+      card.classList.toggle('warn', L.running && L.secondsLeft <= 60 && L.secondsLeft > 0);
+      card.classList.toggle('over', L.secondsLeft <= 0 && L.ended);
+    }
+  });
+}
+
+/* ---------- 5) TALEP İÇE AKTARMA ---------- */
+
+/* Google Forms yanıt tablosundan yapıştırılan metni çözümler.
+   Beklenen sütunlar (sıra önemli değil, başlıktan bulunur):
+   zaman damgası | talep eden firma | görüşülecek firma | süre */
+/* Onay kutulu sorularda Google Forms birden çok seçimi tek hücrede
+   virgülle birleştirir ("TUSAŞ, BAYKAR"). Firma adlarının kendisi de
+   virgül içerebildiği için önce resmi listedeki adlar aranır; liste
+   yoksa virgül/noktalı virgülle bölünür. */
+function parseMultiFirms(cell) {
+  const ham = normalizeName(cell);
+  if (!ham) return [];
+
+  if ((state.firms || []).length) {
+    const metin = ' ' + firmaAnahtar(ham) + ' ';
+    const bulunan = [];
+    // Uzun adlar önce denenir ki kısa bir ad uzunun içinde eşleşmesin
+    [...state.firms].sort((a, b) => firmaAnahtar(b).length - firmaAnahtar(a).length).forEach(f => {
+      const k = firmaAnahtar(f);
+      if (!k) return;
+      if (metin.includes(' ' + k + ' ') && !bulunan.includes(f)) bulunan.push(f);
+    });
+    if (bulunan.length) return bulunan;
+  }
+
+  return ham.split(/\s*[;,]\s*/).map(normalizeName).filter(Boolean);
+}
+
+function parseRequestTable(text) {
+  const satirlar = String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  if (!satirlar.length) return { rows: [], error: 'Boş içerik' };
+
+  const bol = (s) => s.includes('\t') ? s.split('\t') : s.split(/\s*;\s*|\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+  const basliklar = bol(satirlar[0]).map(h => h.replace(/^"|"$/g, '').trim().toLocaleLowerCase('tr'));
+
+  const bul = (...anahtarlar) => basliklar.findIndex(h => anahtarlar.some(a => h.includes(a)));
+  let iFrom = bul('talep eden', 'firma adı', 'firmanız', 'kendi firma', 'talepte bulunan');
+  let iTo = bul('görüşmek', 'görüşülecek', 'talep edilen', 'hedef firma', 'karşı firma');
+  let iDur = bul('süre', 'dakika');
+  let iTime = bul('zaman damgası', 'timestamp', 'tarih');
+
+  const basliklıMi = iFrom >= 0 && iTo >= 0;
+  const veriSatirlari = basliklıMi ? satirlar.slice(1) : satirlar;
+  if (!basliklıMi) { iTime = 0; iFrom = 1; iTo = 2; iDur = 3; } // başlıksız: sabit sıra
+
+  const rows = [];
+  veriSatirlari.forEach((satir, i) => {
+    const h = bol(satir).map(v => v.replace(/^"|"$/g, '').trim());
+    const from = normalizeName(h[iFrom]);
+    const hedefler = parseMultiFirms(h[iTo]);
+    if (!from || !hedefler.length) return;
+    const sureHam = iDur >= 0 ? String(h[iDur] || '').match(/\d+/) : null;
+    const sure = sureHam ? Math.max(1, Number(sureHam[0])) : state.defaultDuration;
+    // Tek gönderimde birden çok firma seçilmişse her biri ayrı talep olur
+    hedefler.forEach(to => rows.push({
+      id: makeId('r'), from, to, duration: sure,
+      createdAt: iTime >= 0 ? String(h[iTime] || '') : '',
+      order: i
+    }));
+  });
+
+  return { rows, headerFound: basliklıMi };
+}
+
+function importRequests() {
+  const kutu = document.getElementById('importBox');
+  const { rows, headerFound } = parseRequestTable(kutu?.value || '');
+  if (!rows.length) {
+    openModal({ title: 'İçe Aktarılamadı', message: 'Tabloda geçerli satır bulunamadı. En az "talep eden firma" ve "görüşülecek firma" sütunları olmalı.', alertOnly: true });
+    return;
+  }
+  const baslangic = state.requests.length;
+  rows.forEach((r, i) => { r.order = baslangic + i; state.requests.push(r); });
+  if (kutu) kutu.value = '';
+  saveState(); render();
+  openModal({
+    title: 'İçe Aktarıldı',
+    message: `${rows.length} talep eklendi.${headerFound ? '' : ' Başlık satırı bulunamadığı için sütunlar sırayla okundu (zaman, talep eden, görüşülecek, süre).'} Şimdi "PROGRAMI OLUŞTUR" ile masalara dağıtabilirsiniz.`,
+    alertOnly: true
+  });
+}
+
+function addManualRequest() {
+  const from = normalizeName(document.getElementById('mFrom')?.value);
+  const to = normalizeName(document.getElementById('mTo')?.value);
+  const dur = Math.max(1, Number(document.getElementById('mDur')?.value) || state.defaultDuration);
+  if (!from || !to) { openModal({ title: 'Eksik Bilgi', message: 'İki firma adı da girilmelidir.', alertOnly: true }); return; }
+  if (upper(from) === upper(to)) { openModal({ title: 'Geçersiz', message: 'Bir firma kendisiyle görüşme talebi oluşturamaz.', alertOnly: true }); return; }
+  state.requests.push({ id: makeId('r'), from, to, duration: dur, order: state.requests.length, createdAt: new Date().toISOString() });
+  ['mFrom', 'mTo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  saveState(); render();
+}
+
+function removeRequest(id) {
+  state.requests = state.requests.filter(r => r.id !== id);
+  saveState(); render();
+}
+
+function clearRequests() {
+  openModal({
+    title: 'Talepleri Temizle', message: 'Tüm görüşme talepleri silinsin mi? Program da sıfırlanır.',
+    confirmText: 'TEMİZLE', danger: true,
+    onConfirm: () => { state.requests = []; state.schedule = []; state.unscheduled = []; state.live = {}; saveState(); render(); }
+  });
+}
+
+/* ---------- 6) MASA YÖNETİMİ ---------- */
+
+function addTable() {
+  state.tables.push({ id: makeId('t'), title: `MASA ${state.tables.length + 1}` });
+  saveState(); render();
+}
+function removeTable(id) {
+  if (state.tables.length <= 1) { openModal({ title: 'Silinemiyor', message: 'En az bir masa kalmalı.', alertOnly: true }); return; }
+  state.tables = state.tables.filter(t => t.id !== id);
+  delete state.live[id];
+  saveState(); render();
+}
+function renameTable(id, value) {
+  const t = state.tables.find(x => x.id === id);
+  if (t) { t.title = normalizeName(value) || t.title; saveState(); }
+}
+
+function applySettings() {
+  const g = id => document.getElementById(id)?.value;
+  state.eventName = normalizeName(g('setName'));
+  state.formUrl = String(g('setForm') || '').trim();
+  state.webAppUrl = String(g('setWebApp') || '').trim();
+  if (/^\d{2}:\d{2}$/.test(String(g('setStart')))) state.startTime = g('setStart');
+  if (/^\d{2}:\d{2}$/.test(String(g('setEnd')))) state.endTime = g('setEnd');
+  state.defaultDuration = Math.max(1, Number(g('setDur')) || 15);
+  saveState(); render();
+}
+
+function applyWeights() {
+  const g = id => document.getElementById(id)?.value;
+  state.priorityMode = g('setMode') === 'fifo' ? 'fifo' : 'puan';
+  const say = (v, y) => Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : y;
+  state.weights = {
+    ilkGorusme: say(g('wIlk'), 22),
+    sure: say(g('wSure'), 6),
+    yogunluk: say(g('wYog'), 2.5),
+    karsilikli: say(g('wKar'), 14)
+  };
+  saveState();
+  if (state.schedule.length) buildSchedule();   // program varsa yeniden hesapla
+  render();
+}
+
+function generateSchedule() {
+  if (!state.requests.length) { openModal({ title: 'Talep Yok', message: 'Önce görüşme taleplerini içe aktarın veya elle ekleyin.', alertOnly: true }); return; }
+  buildSchedule();
+  render();
+  const u = state.unscheduled.length;
+  openModal({
+    title: 'Program Oluşturuldu',
+    message: `${state.schedule.length} görüşme masalara dağıtıldı.` + (u ? ` ${u} görüşme etkinlik saatlerine sığmadı — süreyi uzatabilir veya masa ekleyebilirsiniz.` : ''),
+    alertOnly: true
+  });
+}
+
+/* ---------- 7) EKRAN ÇİZİMİ ---------- */
+
+function tableCardHtml(t, follow) {
+  const L = liveOf(t.id);
+  const m = currentMeeting(t.id);
+  const n = nextMeeting(t.id);
+  const list = tableMeetings(t.id);
+  const bitti = L.index >= list.length && list.length > 0;
+  const cls = L.running && L.secondsLeft > 60 ? 'running' : (L.running && L.secondsLeft > 0 ? 'warn' : (L.secondsLeft <= 0 && L.ended ? 'over' : ''));
+
+  const govde = !list.length
+    ? `<div class="tc-body"><div class="empty-note">Bu masaya görüşme atanmadı</div></div>`
+    : bitti
+      ? `<div class="tc-body"><div class="tc-label">Tamamlandı</div><div class="tc-pair">Bu masadaki tüm görüşmeler bitti</div></div>`
+      : `<div class="tc-body">
+           <div class="tc-label">Görüşen Firmalar</div>
+           <div class="tc-pair">${esc(m.from)}<br>↔<br>${esc(m.to)}</div>
+           <div class="tc-label">Kalan Süre</div>
+           <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
+           <div class="tc-next">
+             ${n ? `Sıradaki: <b>${esc(n.from)} ↔ ${esc(n.to)}</b> · ${fmtClock(n.start)}` : 'Bu masada son görüşme'}
+           </div>
+         </div>`;
+
+  const eylemler = follow || !list.length || bitti ? '' : `
+    <div class="tc-actions">
+      <button type="button" class="green" onclick="baslat('${t.id}')" ${L.running ? 'disabled' : ''}>▶ BAŞLAT</button>
+      <button type="button" class="red" onclick="durdur('${t.id}')" ${!L.running ? 'disabled' : ''}>⏸ DURDUR</button>
+      <button type="button" class="ghost small" onclick="sifirla('${t.id}')">↺ SÜREYİ SIFIRLA</button>
+      <button type="button" class="yellow small" onclick="sonraki('${t.id}')">▶▶ SIRADAKİ</button>
+    </div>`;
+
+  const ilerleme = list.length ? `${Math.min(L.index + 1, list.length)}/${list.length}` : '0';
+  return `
+    <div class="table-card ${cls}" data-card="${t.id}">
+      <div class="tc-head"><span>${esc(t.title)}</span><span class="status-pill">${ilerleme}</span></div>
+      ${govde}${eylemler}
+    </div>`;
+}
+
+function scheduleTableHtml() {
+  if (!state.schedule.length) return `<div class="empty-note">Henüz program oluşturulmadı</div>`;
+  const satirlar = state.schedule.map(s => {
+    const L = liveOf(s.tableId);
+    const list = tableMeetings(s.tableId);
+    const idx = list.findIndex(x => x === s);
+    const durum = idx < L.index ? 'done' : (idx === L.index ? 'now' : '');
+    return `<tr class="${durum}">
+      <td class="clock">${fmtClock(s.start)}–${fmtClock(s.end)}</td>
+      <td>${esc(s.tableTitle)}</td>
+      <td class="pair">${esc(s.from)} ↔ ${esc(s.to)}${s.mutual ? '<span class="badge">karşılıklı</span>' : ''}</td>
+      <td>${s.duration} dk</td>
+      ${state.priorityMode === 'fifo' ? '' : `<td class="hint" style="font-size:11px">${s.puan ?? ''}</td>`}
+    </tr>`;
+  }).join('');
+  return `<div class="sched"><table>
+    <thead><tr><th>Saat</th><th>Masa</th><th>Firmalar</th><th>Süre</th>${state.priorityMode === 'fifo' ? '' : '<th>Puan</th>'}</tr></thead>
+    <tbody>${satirlar}</tbody></table></div>`;
+}
+
+function requestListHtml() {
+  if (!state.requests.length) return `<div class="empty-note">Henüz talep yok</div>`;
+  const satirlar = state.requests.map((r, i) => `<tr>
+    <td class="clock">${i + 1}</td>
+    <td class="pair">${esc(r.from)} → ${esc(r.to)}</td>
+    <td>${r.duration} dk</td>
+    <td style="text-align:right"><button type="button" class="small red" onclick="removeRequest('${r.id}')">×</button></td>
+  </tr>`).join('');
+  return `<div class="sched" style="max-height:300px"><table>
+    <thead><tr><th>#</th><th>Talep</th><th>Süre</th><th></th></tr></thead>
+    <tbody>${satirlar}</tbody></table></div>`;
+}
+
+function renderControl() {
+  document.body.style.overflow = '';
+  const firmalar = new Set();
+  state.requests.forEach(r => { firmalar.add(upper(r.from)); firmalar.add(upper(r.to)); });
+  const sigmayan = state.unscheduled.length;
+  const bilinmeyen = state.firms.length ? taninmayanAdlar() : [];
+
+  document.getElementById('app').innerHTML = `
+    <main class="shell">
+      <section class="topbar">
+        <h1>${esc(state.eventName || 'B2B Görüşme Eşleştirme Sistemi')}</h1>
+        <div class="top-actions">
+          ${sesAcik ? '' : `<button type="button" class="yellow" onclick="sesiAc()">🔊 SESLİ ANONSU AÇ</button>`}
+          <button type="button" onclick="openFollow()">TAKİP EKRANI</button>
+          <button type="button" class="secondary" onclick="openQr()">QR KODU</button>
+          <button type="button" class="secondary" onclick="openShare()">PAYLAŞ / KAYDET</button>
+        </div>
+      </section>
+
+      ${sesAcik ? '' : `<div class="audio-bar">⚠ Sesli anonslar kapalı. Etkinlik başlamadan önce "SESLİ ANONSU AÇ" düğmesine basın — tarayıcılar sesi ancak bir tıklamadan sonra çalabilir.</div>`}
+
+      <div class="stat-row">
+        <div class="stat"><div class="k">Firma</div><div class="v">${firmalar.size}</div></div>
+        <div class="stat"><div class="k">Talep</div><div class="v">${state.requests.length}</div></div>
+        <div class="stat"><div class="k">Görüşme</div><div class="v">${state.schedule.length}</div></div>
+        <div class="stat"><div class="k">Masa</div><div class="v">${state.tables.length}</div></div>
+        <div class="stat ${sigmayan ? 'warn' : ''}"><div class="k">Sığmayan</div><div class="v">${sigmayan}</div></div>
+      </div>
+
+      <div class="main-layout">
+        <div style="display:grid;gap:14px;min-width:0">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Masalar</h2>
+              <span>${state.startTime} – ${state.endTime}</span>
+            </div>
+            <div class="panel-body">
+              <div class="tables-grid">${state.tables.map(t => tableCardHtml(t, false)).join('')}</div>
             </div>
           </section>
 
-          <section class="control-layout">
-            <div class="left-column">
-              <section class="panel">
-                <div class="panel-header">
-                  <h2>Salon Yerleşimi</h2>
-                  <div class="panel-header-actions">
-                    ${isEditMode ? `
-                      <button type="button" class="secondary small" onclick="addShape('rect')">+ DİKDÖRTGEN</button>
-                      <button type="button" class="secondary small" onclick="addShape('circle')">+ DAİRE</button>
-                      <button type="button" class="secondary small" onclick="addMeetingTable()">+ MASA</button>
-                      <button type="button" class="red small" onclick="resetLayoutConfirm()">↺ YERLEŞİMİ SIFIRLA</button>
-                      <button type="button" class="green small" onclick="toggleEditMode()">✔ BİTTİ</button>
-                    ` : `
-                      <button type="button" class="green small" onclick="startAllMeetings()">▶ BAŞLAT</button>
-                      <button type="button" class="red small" onclick="stopAllMeetings()">⏸ DURDUR</button>
-                      <button type="button" class="secondary small" onclick="setAllDurations()">⏱ SÜRE KUR</button>
-                      <button type="button" class="ghost small" onclick="toggleEditMode()">✎ DÜZENLE</button>
-                    `}
+          <section class="panel">
+            <div class="panel-header"><h2>Görüşme Programı</h2><span>${state.schedule.length} görüşme</span></div>
+            <div class="panel-body">
+              ${scheduleTableHtml()}
+              ${sigmayan ? `<details class="collapsible"><summary>${sigmayan} görüşme yerleştirilemedi</summary><div class="collapsible-body">
+                <p class="hint">Bu görüşmeler etkinlik saatlerine sığmadı. Bitiş saatini uzatın veya masa ekleyin.</p>
+                ${state.unscheduled.map(u => `<div class="hint">• ${esc(u.from)} ↔ ${esc(u.to)} (${u.duration} dk)</div>`).join('')}
+              </div></details>` : ''}
+            </div>
+          </section>
+        </div>
+
+        <div style="display:grid;gap:14px;min-width:0">
+          <section class="panel">
+            <div class="panel-header"><h2>Katılımcı Firmalar</h2><span>${state.firms.length}</span></div>
+            <div class="panel-body">
+              ${state.firms.length ? '' : `<p class="hint">Etkinliğe katılacak firmaları buraya ekleyin. Sonra bu listeyi kopyalayıp Google Form'daki açılır listelere yapıştırın — böylece katılımcılar yazmak yerine seçer ve yazım hatası olmaz.</p>`}
+              <details class="collapsible" ${state.firms.length ? '' : 'open'}>
+                <summary>Firma listesi ekle</summary>
+                <div class="collapsible-body">
+                  <textarea id="firmBox" placeholder="Her satıra bir firma:&#10;ONS MAKİNA&#10;TUSAŞ&#10;BAYKAR"></textarea>
+                  <div class="row"><button type="button" onclick="firmaEkleToplu()">LİSTEYE EKLE</button></div>
+                </div>
+              </details>
+              ${state.firms.length ? `
+                <div class="firm-list">${state.firms.map(f => `<span class="firm-chip">${esc(f)}<button type="button" onclick="firmaSil('${esc(f).replace(/'/g, "\\'")}')">×</button></span>`).join('')}</div>
+                <div class="row">
+                  <button type="button" class="green" style="flex:1" onclick="formuOtomatikOlustur()">⚡ FORM OLUŞTUR</button>
+                  <button type="button" class="secondary small" onclick="firmaListesiniKopyala()">Listeyi kopyala</button>
+                  <button type="button" class="ghost small" onclick="firmaListesiniTemizle()">Temizle</button>
+                </div>` : ''}
+
+              <div class="row" style="border-top:1px solid var(--border-soft);padding-top:10px;margin-top:2px">
+                <button type="button" class="${state.webAppUrl ? 'secondary' : 'yellow'} small" onclick="webAppKurulum()">
+                  ${state.webAppUrl ? '⚙ Form oluşturucu ayarı' : '⚙ TEK TIK KURULUMU'}
+                </button>
+                <button type="button" class="secondary small" onclick="formBetigiGoster()">Betiği elle çalıştır</button>
+                ${state.webAppUrl ? '<span class="hint" style="font-size:11px;color:var(--green);font-weight:600">✓ kurulu</span>' : ''}
+              </div>
+            </div>
+          </section>
+
+          ${bilinmeyen.length ? `
+          <section class="panel" style="border-color:var(--yellow)">
+            <div class="panel-header" style="background:rgba(181,121,14,.12)"><h2>⚠ Listede Olmayan Adlar</h2><span>${bilinmeyen.length}</span></div>
+            <div class="panel-body">
+              <p class="hint">Bu adlar katılımcı firma listesinde yok. Aynı firmanın farklı yazımı olabilir — eşleştirin ya da listeye ekleyin. Aksi halde ayrı firma sayılır ve çakışma kontrolü hatalı olur.</p>
+              ${bilinmeyen.map(b => `
+                <div class="unknown-row">
+                  <div><b>${esc(b.ad)}</b> <span class="hint" style="font-size:11px">(${b.sayi} talep)</span></div>
+                  <div class="row">
+                    ${b.oneri ? `<button type="button" class="green small" onclick="adiEsle('${esc(b.ad).replace(/'/g, "\\'")}','${esc(b.oneri.firma).replace(/'/g, "\\'")}')">→ ${esc(b.oneri.firma)}</button>` : ''}
+                    <select onchange="if(this.value)adiEsle('${esc(b.ad).replace(/'/g, "\\'")}',this.value)">
+                      <option value="">Başka firmaya eşle…</option>
+                      ${state.firms.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('')}
+                    </select>
+                    <button type="button" class="secondary small" onclick="adiFirmaYap('${esc(b.ad).replace(/'/g, "\\'")}')">YENİ FİRMA</button>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </section>` : ''}
+
+          <section class="panel">
+            <div class="panel-header"><h2>Talepler</h2><span>${state.requests.length}</span></div>
+            <div class="panel-body">
+              <details class="collapsible" ${state.requests.length ? '' : 'open'}>
+                <summary>Google Forms tablosundan aktar</summary>
+                <div class="collapsible-body">
+                  <p class="hint">Form yanıtları tablosunu Google Sheets'te seçip kopyalayın, buraya yapıştırın. Başlık satırını da dahil edin.</p>
+                  <textarea id="importBox" placeholder="Zaman damgası&#9;Talep eden firma&#9;Görüşülecek firma&#9;Süre&#10;10.06.2026 09:12&#9;ONS MAKİNA&#9;TUSAŞ&#9;20"></textarea>
+                  <div class="row"><button type="button" onclick="importRequests()">TABLOYU AKTAR</button></div>
+                </div>
+              </details>
+
+              <details class="collapsible">
+                <summary>Elle talep ekle</summary>
+                <div class="collapsible-body">
+                  <div class="grid2">
+                    <div><label for="mFrom">Talep eden</label><input id="mFrom" type="text" autocomplete="off"></div>
+                    <div><label for="mTo">Görüşülecek</label><input id="mTo" type="text" autocomplete="off"></div>
+                  </div>
+                  <div class="grid2">
+                    <div><label for="mDur">Süre (dk)</label><input id="mDur" type="number" min="1" value="${state.defaultDuration}"></div>
+                    <div style="display:flex;align-items:flex-end"><button type="button" class="secondary" style="width:100%" onclick="addManualRequest()">EKLE</button></div>
                   </div>
                 </div>
-                <div class="hall-canvas-wrap">
-                  ${renderHallCanvas('control')}
-                </div>
-              </section>
+              </details>
 
-              <section class="panel">
-                <div class="panel-header"><h2>Katılımcı Sütunu</h2></div>
-                <div class="panel-body participants-panel-body">
-                  ${renderParticipantsTools()}
-                  ${renderParticipantSheet()}
-                </div>
-              </section>
-
-              <section class="panel">
-                <div class="panel-header">
-                  <h2>Tüm Masa Sıraları</h2>
-                  <span>Saatler tahminidir</span>
-                </div>
-                <div class="panel-body">
-                  ${renderAllQueuesTable()}
-                </div>
-              </section>
-            </div>
-            ${renderSelectedPanel()}
-          </section>
-        </main>
-      `;
-
-      bindLayoutDragging();
-      refreshDynamicDisplays();
-
-      const panelBody = document.querySelector('.selected-panel .panel-body');
-      if (panelBody) panelBody.scrollTop = previousScroll.panel;
-      const sheet = document.getElementById('participantSheet');
-      if (sheet) sheet.scrollTop = previousScroll.sheet;
-      const queueList = document.getElementById('queueList');
-      if (queueList) queueList.scrollTop = previousScroll.queue;
-      window.scrollTo(0, previousScroll.page);
-    }
-
-    function renderHallCanvas(mode) {
-      const follow = mode === 'follow';
-      return `
-        <div id="hallCanvas" class="hall-canvas ${follow ? 'follow' : ''} ${isEditMode && !follow ? 'edit-active' : ''}" ondragover="allowCanvasDrop(event)" ondrop="dropOnCanvas(event)">
-          <div class="door-sketch door-1">KAPI</div>
-          <div class="door-sketch door-2">KAPI</div>
-          ${state.tables.map(table => renderLayoutItem(table, mode)).join('')}
-        </div>
-      `;
-    }
-
-    function renderLayoutItem(table, mode) {
-      const isFollow = mode === 'follow';
-      const selected = !isFollow && table.id === selectedId;
-      const clickAttr = (!isFollow && (isEditMode || table.kind === 'meeting')) ? `onclick="selectTable('${table.id}')"` : '';
-
-      if (table.kind === 'shape') {
-        const style = `left:${table.x}%;top:${table.y}%;width:${table.w}%;height:${table.h}%;background-color:${table.bgColor};color:${table.textColor};`;
-        const common = `data-table-id="${escapeHtml(table.id)}" class="layout-item shape-item ${table.shape} ${selected ? 'selected' : ''} ${isFollow ? 'follow-readonly' : ''}" style="${style}"`;
-        return `
-          <div ${common} ${clickAttr}>
-            ${escapeHtml(table.text)}
-          </div>
-        `;
-      }
-
-      /* Takip ekranındaki kartlarda ek olarak "sıradaki firmalar"
-         bloğu bulunur; bu blok sığsın diye kart, ızgara hücresi
-         içinde kalacak şekilde dikeyde büyütülür ve merkezde tutulur.
-         Kontrol panelinde kart geometrisi olduğu gibi kalır. */
-      let top = table.y;
-      let height = table.h;
-      if (isFollow) {
-        const count = getMeetingTables().length || 1;
-        const cellH = MEETING_AUTO_AREA.h / getMeetingGrid(count).rows;
-        height = Math.min(table.h * 1.45, cellH * 0.94);
-        top = Math.max(MEETING_AUTO_AREA.y, table.y - (height - table.h) / 2);
-        const maxTop = MEETING_AUTO_AREA.y + MEETING_AUTO_AREA.h - height;
-        top = Math.min(top, maxTop);
-      }
-
-      const style = `left:${table.x}%;top:${top}%;width:${table.w}%;height:${height}%;`;
-      const common = `data-table-id="${escapeHtml(table.id)}" class="layout-item meeting-item ${table.shape} ${selected ? 'selected' : ''} ${isFollow ? 'follow-readonly' : ''}" style="${style}"`;
-      const dropAttrs = !isFollow ? `ondragenter="markDropReady(event, '${table.id}')" ondragleave="unmarkDropReady(event, '${table.id}')" ondragover="allowTableDrop(event)" ondrop="dropParticipantToTable(event, '${table.id}')"` : '';
-
-      const color = getTimeColor(table.saniye);
-      const queuePreview = isFollow ? `
-              <div class="meeting-queue-preview">
-                <div class="mini-label">SIRADAKİ FİRMALAR</div>
-                <ol data-queue-preview-id="${escapeHtml(table.id)}">${renderQueuePreview(table)}</ol>
-              </div>` : '';
-      const meta = isFollow ? '' : `
-            <div class="meeting-meta"><span>${escapeHtml(table.running ? 'Çalışıyor' : 'Durdu')}</span></div>`;
-
-      return `
-        <div ${common} ${clickAttr} ${dropAttrs}>
-          <div class="meeting-content">
-            <div class="meeting-title">${escapeHtml(table.title)}</div>
-            <div class="meeting-main">
-              <div class="mini-label">⏱ KALAN SÜRE</div>
-              <div class="meeting-time" data-time-id="${escapeHtml(table.id)}" style="color:${color}">${formatTime(table.saniye)}</div>
-              <div class="mini-label current-label">MEVCUT FİRMA</div>
-              <div class="meeting-company" data-company-id="${escapeHtml(table.id)}">${displayValue(table.firma)}</div>${queuePreview}
-            </div>${meta}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderParticipantsTools() {
-      return `
-        <div class="participants-tools">
-          <div class="add-row">
-            <div>
-              <label for="manualParticipant">Manuel katılımcı ekle</label>
-              <input id="manualParticipant" type="text" placeholder="Firma / katılımcı adı" autocomplete="off" onkeydown="if(event.key==='Enter'){addManualParticipant()}" />
-            </div>
-            <button type="button" class="secondary" onclick="addManualParticipant()">SÜTUNA EKLE</button>
-          </div>
-          <div class="add-row">
-            <div>
-              <label for="startTime">Etkinlik başlangıç saati</label>
-              <input id="startTime" type="time" value="${escapeHtml(state.startTime || '09:00')}" onchange="applyStartTime()" />
-            </div>
-          </div>
-          <details class="collapsible">
-            <summary>Excel'den toplu aktar</summary>
-            <div class="collapsible-body">
-              <textarea id="pasteBox" placeholder="Excel'den iki sütunu birlikte yapıştırın:&#10;09:00&#9;ONS MAKİNA&#10;09:15&#9;ERFA MÜHENDİSLİK&#10;&#10;Tek sütun yapıştırırsanız saatler otomatik hesaplanır."></textarea>
+              ${requestListHtml()}
               <div class="row">
-                <button type="button" onclick="importParticipants()">SÜTUNA AKTAR</button>
-                <button type="button" class="ghost" onclick="clearParticipantsConfirm()">SÜTUNU TEMİZLE</button>
+                <button type="button" class="green" style="flex:1" onclick="generateSchedule()">⚙ PROGRAMI OLUŞTUR</button>
+                <button type="button" class="ghost" onclick="clearRequests()">TEMİZLE</button>
               </div>
             </div>
-          </details>
-        </div>
-      `;
-    }
-
-    function renderParticipantSheet() {
-      if (!state.participants.length) {
-        selectedParticipantIds.clear();
-        return `<div id="participantSheet" class="sheet empty" tabindex="0" onpaste="pasteParticipantsFromClipboard(event)" ondragover="allowParticipantReturn(event)" ondrop="dropQueueToParticipants(event)">Katılımcı yok</div>`;
-      }
-
-      // Silinmiş katılımcılar seçimde kalmasın
-      const mevcutIds = new Set(state.participants.map(p => p.id));
-      [...selectedParticipantIds].forEach(id => { if (!mevcutIds.has(id)) selectedParticipantIds.delete(id); });
-
-      const secili = selectedParticipantIds.size;
-      const hepsiSecili = secili === state.participants.length;
-      const hedefMasa = getTable(selectedId);
-      const hedefAdi = hedefMasa && hedefMasa.kind === 'meeting' ? hedefMasa.title : null;
-
-      const toplu = secili ? `
-        <div class="bulk-bar">
-          <span class="bulk-count">${secili} katılımcı seçili</span>
-          <div class="bulk-actions">
-            ${hedefAdi
-              ? `<button type="button" class="green small" onclick="moveSelectedToQueue()">${escapeHtml(hedefAdi)} SIRASINA AKTAR</button>`
-              : `<span class="bulk-hint">Aktarmak için bir masa seçin</span>`}
-            <button type="button" class="ghost small" onclick="clearParticipantSelection()">SEÇİMİ TEMİZLE</button>
-          </div>
-        </div>` : '';
-
-      return `
-        ${toplu}
-        <div id="participantSheet" class="sheet" tabindex="0" onpaste="pasteParticipantsFromClipboard(event)" ondragover="allowParticipantReturn(event)" ondrop="dropQueueToParticipants(event)">
-          <div class="sheet-head">
-            <div class="head-check"><input type="checkbox" ${hepsiSecili ? 'checked' : ''} onchange="toggleAllParticipants(this.checked)" title="Tümünü seç" /></div>
-            <div>Saat</div><div>Katılımcı</div><div>İşlem</div>
-          </div>
-          ${state.participants.map((participant, index) => `
-            <div class="participant-cell${selectedParticipantIds.has(participant.id) ? ' picked' : ''}" draggable="true"
-                 ondragstart="dragParticipant(event, '${participant.id}', ${index})"
-                 ondragover="allowParticipantReorder(event, ${index})"
-                 ondragleave="clearReorderMark(event)"
-                 ondrop="dropParticipantReorder(event, ${index})">
-              <div class="row-check" draggable="false" onmousedown="event.stopPropagation()">
-                <input type="checkbox" ${selectedParticipantIds.has(participant.id) ? 'checked' : ''}
-                       onchange="toggleParticipantSelection('${participant.id}', this.checked)" />
-              </div>
-              <div class="slot-time${participant.clock ? ' fixed' : ''}"
-                   title="${participant.clock ? 'Excel\'den alınan saat — değiştirmek için tıklayın' : 'Sıraya göre hesaplandı — sabitlemek için tıklayın'}"
-                   onmousedown="event.stopPropagation()"
-                   onclick="editParticipantClock('${participant.id}')">${participant.clock || getParticipantClock(index)}</div>
-              <div class="cell-value" title="${escapeHtml(participant.name)}">${escapeHtml(participant.name)}</div>
-              <div class="ops" draggable="false" onmousedown="event.stopPropagation()">
-                <button type="button" class="small ghost" title="Düzenle" onclick="editParticipant('${participant.id}')">✎</button>
-                <button type="button" class="small red" title="Sil" onclick="removeParticipant('${participant.id}')">×</button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    /* Tüm masaların sıralarını tek tabloda gösterir: her sütun bir masa,
-       her satır bir tur (şu an görüşülen + sıradakiler). */
-    function renderAllQueuesTable() {
-      const tables = getMeetingTables();
-      if (!tables.length) return '<div class="empty-note">Masa yok</div>';
-      const maxRounds = tables.reduce((max, t) => Math.max(max, t.queue.length), 0) + 1;
-
-      const head = tables.map(t => `<div class="oq-cell oq-head" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</div>`).join('');
-      const rows = Array.from({ length: maxRounds }, (_, round) => {
-        const label = round === 0 ? 'Şu an' : `${round}. sıra`;
-        const cells = tables.map((t) => {
-          const name = round === 0 ? String(t.firma || '').trim() : t.queue[round - 1];
-          if (!name) return `<div class="oq-cell oq-empty">—</div>`;
-          // Excel'den gelen sabit saat varsa o kullanılır, yoksa tura göre hesaplanır.
-          const sabit = getFixedClock(name);
-          const clock = sabit || getTableSlotClock(t, round);
-          return `<div class="oq-cell${round === 0 ? ' oq-now' : ''}">
-                    <span class="oq-clock${sabit ? ' fixed' : ''}">${clock}</span>
-                    <span class="oq-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-                  </div>`;
-        }).join('');
-        return `<div class="oq-row"><div class="oq-cell oq-label">${label}</div>${cells}</div>`;
-      }).join('');
-
-      return `
-        <div class="overview-queues" style="--oq-cols:${tables.length}">
-          <div class="oq-row oq-header"><div class="oq-cell oq-head oq-label">Tur</div>${head}</div>
-          ${rows}
-        </div>
-      `;
-    }
-
-    function renderSelectedPanel() {
-      const table = getSelectedTable();
-      if (!table) {
-        return `
-          <section class="panel selected-panel">
-            <div class="panel-header"><h2>Seçili Öge</h2></div>
-            <div class="panel-body"><div class="empty-note">Seçim yapılmadı.</div></div>
           </section>
-        `;
-      }
-      if (table.kind === 'shape') return renderSelectedShapePanel(table);
-      return renderSelectedMeetingPanel(table);
-    }
 
-    function renderSelectedShapePanel(table) {
-      return `
-        <section class="panel selected-panel">
-          <div class="panel-header">
-            <h2>Şekil Düzenle</h2>
-          </div>
-          <div class="panel-body">
-            <div class="form-grid">
-              <div class="span">
-                <label for="shapeText">Metin</label>
-                <input id="shapeText" type="text" value="${escapeHtml(table.text)}" autocomplete="off" />
+          <section class="panel">
+            <div class="panel-header"><h2>Ayarlar</h2></div>
+            <div class="panel-body">
+              <div><label for="setName">Etkinlik adı</label><input id="setName" type="text" value="${esc(state.eventName)}" autocomplete="off"></div>
+              <div class="grid2">
+                <div><label for="setStart">Başlangıç</label><input id="setStart" type="time" value="${esc(state.startTime)}"></div>
+                <div><label for="setEnd">Bitiş</label><input id="setEnd" type="time" value="${esc(state.endTime)}"></div>
               </div>
-              <div>
-                <label for="shapeW">Genişlik (%)</label>
-                <input id="shapeW" type="number" min="2" max="100" value="${table.w}" />
-              </div>
-              <div>
-                <label for="shapeH">Yükseklik (%)</label>
-                <input id="shapeH" type="number" min="2" max="100" value="${table.h}" />
-              </div>
-              <div>
-                <label for="shapeBg">Arka Plan Rengi</label>
-                <input id="shapeBg" type="color" value="${table.bgColor}" />
-              </div>
-              <div>
-                <label for="shapeTextCol">Yazı Rengi</label>
-                <input id="shapeTextCol" type="color" value="${table.textColor}" />
-              </div>
+              <div><label for="setDur">Varsayılan görüşme süresi (dk)</label><input id="setDur" type="number" min="1" value="${state.defaultDuration}"></div>
+              <div><label for="setForm">Google Form adresi</label><input id="setForm" type="url" value="${esc(state.formUrl)}" placeholder="https://forms.gle/..."></div>
+              <div><label for="setWebApp">Form oluşturucu adresi (tek tık)</label><input id="setWebApp" type="url" value="${esc(state.webAppUrl)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+              <button type="button" class="secondary" onclick="applySettings()">AYARLARI KAYDET</button>
+
+              <div class="section-label">Öncelik Kuralı</div>
+              <select id="setMode" onchange="applyWeights()">
+                <option value="puan" ${state.priorityMode !== 'fifo' ? 'selected' : ''}>Adil dağıtım (puanlı)</option>
+                <option value="fifo" ${state.priorityMode === 'fifo' ? 'selected' : ''}>Sadece talep sırası</option>
+              </select>
+              ${state.priorityMode === 'fifo' ? '' : `
+                <p class="hint">Puan yükseldikçe görüşme daha erken saate yerleşir. Değerleri artırmak o etkenin ağırlığını artırır.</p>
+                <div class="grid2">
+                  <div><label for="wIlk">Henüz görüşmemiş olana öncelik</label><input id="wIlk" type="number" min="0" step="1" value="${state.weights.ilkGorusme}" onchange="applyWeights()"></div>
+                  <div><label for="wKar">Karşılıklı talep bonusu</label><input id="wKar" type="number" min="0" step="1" value="${state.weights.karsilikli}" onchange="applyWeights()"></div>
+                  <div><label for="wSure">Uzun süre cezası</label><input id="wSure" type="number" min="0" step="1" value="${state.weights.sure}" onchange="applyWeights()"></div>
+                  <div><label for="wYog">Çok talep cezası</label><input id="wYog" type="number" min="0" step="0.5" value="${state.weights.yogunluk}" onchange="applyWeights()"></div>
+                </div>`}
+
+              <div class="section-label">QR Görseli</div>
+              ${state.qrImage
+                ? `<div class="qr-preview"><img src="${state.qrImage}" alt="Yüklenen QR"><div class="row">
+                     <button type="button" class="secondary small" onclick="qrGorseliYukle()">DEĞİŞTİR</button>
+                     <button type="button" class="red small" onclick="qrGorseliSil()">KALDIR</button>
+                   </div></div>`
+                : `<p class="hint">QR kodunuzu bir kez üretip (örn. qr-code-generator.com) görselini buraya yükleyin. Böylece internet olmadan da görüntülenir.</p>
+                   <button type="button" class="secondary" onclick="qrGorseliYukle()">⬆ QR GÖRSELİ YÜKLE</button>`}
+
+              <div class="section-label">Masalar</div>
+              ${state.tables.map(t => `<div class="row">
+                <input type="text" value="${esc(t.title)}" style="flex:1" onchange="renameTable('${t.id}', this.value)">
+                <button type="button" class="small red" onclick="removeTable('${t.id}')">×</button>
+              </div>`).join('')}
+              <button type="button" class="secondary" onclick="addTable()">+ MASA EKLE</button>
             </div>
-            <button type="button" class="secondary" style="width:100%" onclick="applySelectedShape()">GÜNCELLE</button>
-            <button type="button" class="red" style="width:100%;margin-top:4px" onclick="deleteSelectedTable()">SİL</button>
-          </div>
-        </section>
-      `;
-    }
-
-    function renderSelectedMeetingPanel(table) {
-      const statusClass = table.running ? 'running' : 'stopped';
-      const statusLabel = table.running ? 'Çalışıyor' : 'Durdu';
-      return `
-        <section class="panel selected-panel">
-          <div class="panel-header">
-            <h2>Seçili Toplantı Masası</h2>
-            <span>${escapeHtml(table.title)}</span>
-          </div>
-          <div class="panel-body">
-            <div class="section-label">Masa Bilgisi</div>
-            <div class="form-grid">
-              <div>
-                <label for="selTitle">Masa başlığı</label>
-                <input id="selTitle" type="text" value="${escapeHtml(table.title)}" autocomplete="off" />
-              </div>
-              <div>
-                <label for="selDuration">Süre (dakika)</label>
-                <input id="selDuration" type="number" min="1" step="1" value="${escapeHtml(table.duration)}" />
-              </div>
-            </div>
-            <button type="button" class="secondary" style="width:100%" onclick="applySelectedMeeting()">GÜNCELLE / SÜREYİ KUR</button>
-
-            <div class="section-label">Sayaç</div>
-            <div class="status-line">
-              <span>Kalan süre</span>
-              <span class="value" id="selectedTime" style="color:${getTimeColor(table.saniye)}">${formatTime(table.saniye)}</span>
-              <span class="status-pill ${statusClass}"><span class="dot"></span>${statusLabel}</span>
-            </div>
-            <div class="button-row-2">
-              <button type="button" class="green" onclick="startMeeting('${table.id}')">▶ BAŞLAT</button>
-              <button type="button" class="red" onclick="stopMeeting('${table.id}')">⏸ DURDUR</button>
-            </div>
-            <button type="button" class="yellow" style="width:100%" onclick="nextMeeting('${table.id}')">▶▶ SIRADAKİ FİRMAYA GEÇ</button>
-
-            <div class="section-label">Masa Sırası</div>
-            ${renderQueueBox(table)}
-          </div>
-        </section>
-      `;
-    }
-
-    function renderQueueBox(table) {
-      const currentName = String(table.firma || '').trim();
-      const currentRow = `
-        <div class="queue-item current-row">
-          <div class="num">▶</div>
-          <div class="name" title="${escapeHtml(currentName || 'Görüşme yok')}">${currentName ? escapeHtml(currentName) : '<span class="empty-text">Görüşme yok</span>'}</div>
-          <div class="ops">
-            <button type="button" class="small ghost" title="Firma adını düzenle" onclick="editCurrentCompany('${table.id}')">✎</button>
-          </div>
+          </section>
         </div>
-      `;
-      return `
-        <div class="queue-box">
-          <div class="queue-title"><span>Şu An / Sıradakiler</span><span>${table.queue.length}</span></div>
-          ${currentRow}
-          <div id="queueList" class="queue-list" ondragover="allowQueueDrop(event)" ondrop="dropParticipantToQueue(event, '${table.id}')">
-            ${table.queue.length ? table.queue.map((name, index) => `
-              <div class="queue-item" draggable="true" ondragstart="dragQueueItem(event, '${table.id}', ${index})">
-                <div class="num">${index + 1}</div>
-                <div class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
-                <div class="ops">
-                  <button type="button" class="small ghost" title="Düzenle" onclick="editQueueItem('${table.id}', ${index})">✎</button>
-                  <button type="button" class="small ghost" title="Yukarı" onclick="moveQueueItem('${table.id}', ${index}, -1)">↑</button>
-                  <button type="button" class="small ghost" title="Aşağı" onclick="moveQueueItem('${table.id}', ${index}, 1)">↓</button>
-                  <button type="button" class="small red" title="Sil" onclick="removeQueueItem('${table.id}', ${index}, true)">×</button>
-                </div>
-              </div>
-            `).join('') : `<div class="empty-note">Sıra boş</div>`}
-          </div>
+      </div>
+    </main>`;
+  startTicking();
+}
+
+function renderFollow() {
+  document.body.style.overflow = 'hidden';
+  const bitmis = state.schedule.filter(s => {
+    const L = liveOf(s.tableId); const list = tableMeetings(s.tableId);
+    return list.indexOf(s) < L.index;
+  }).length;
+  document.getElementById('app').innerHTML = `
+    <main class="follow-screen">
+      <section class="topbar">
+        <h1>${esc(state.eventName || 'B2B Görüşme Programı')}</h1>
+        <div class="follow-progress">Tamamlanan: ${bitmis} / ${state.schedule.length}</div>
+      </section>
+      <div class="tables-grid">${state.tables.map(t => tableCardHtml(t, true)).join('')}</div>
+      <button type="button" class="follow-exit" onclick="closeFollow()">← KONTROL PANELİ</button>
+    </main>`;
+  startTicking();
+  startPolling();
+}
+
+/* QR ekranı: yüklenmiş sabit görsel varsa o gösterilir (internet
+   gerektirmez). Yoksa form adresinden çevrimiçi üretilmeye çalışılır. */
+function renderQr() {
+  document.body.style.overflow = '';
+  const gorsel = state.qrImage;
+  const url = state.formUrl;
+  const cevrimici = !gorsel && url
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=12&data=${encodeURIComponent(url)}`
+    : '';
+
+  let icerik;
+  if (gorsel) {
+    icerik = `<div class="qr-box"><img src="${gorsel}" alt="Görüşme talep formu QR kodu"></div>`;
+  } else if (cevrimici) {
+    icerik = `<div class="qr-box" id="qrBox"><img src="${esc(cevrimici)}" alt="Form QR kodu" onerror="qrHata()"></div>`;
+  } else {
+    icerik = `<p class="hint" style="font-size:15px;max-width:520px">Henüz QR görseli yüklenmedi.<br>Kontrol panelindeki <b>Ayarlar → QR Görseli</b> bölümünden yükleyebilirsiniz.</p>`;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <main class="shell">
+      <section class="topbar">
+        <h1>${esc(state.eventName || 'Görüşme Talep Formu')}</h1>
+        <button type="button" class="secondary" onclick="closeQr()">← KONTROL PANELİ</button>
+      </section>
+      <section class="panel"><div class="qr-wrap">
+        ${(gorsel || cevrimici) ? `<p class="hint" style="font-size:18px;max-width:600px">Görüşmek istediğiniz firmaları bildirmek için telefonunuzun kamerasıyla okutun.</p>` : ''}
+        ${icerik}
+        ${url ? `<div class="qr-link" id="qrLink">${esc(url)}</div>
+                 <button type="button" class="secondary" onclick="kopyala('${esc(url)}')">ADRESİ KOPYALA</button>` : ''}
+      </div></section>
+    </main>`;
+}
+
+function qrHata() {
+  const k = document.getElementById('qrBox');
+  if (k) k.innerHTML = '<p class="hint" style="padding:20px;max-width:420px">QR görüntüsü çevrimiçi üretilemedi (internet yok).<br>Ayarlar bölümünden sabit bir QR görseli yükleyin.</p>';
+  const l = document.getElementById('qrLink');
+  if (l) { l.style.fontSize = '17px'; l.style.fontWeight = '700'; l.style.color = 'var(--blue)'; }
+}
+
+/* QR görselini dosyadan yükler ve veri olarak saklar; böylece
+   kaydedilen HTML dosyasının içine de gömülür. */
+function qrGorseliYukle() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/png,image/jpeg,image/svg+xml,image/webp';
+  inp.onchange = () => {
+    const f = inp.files?.[0];
+    if (!f) return;
+    if (f.size > 3 * 1024 * 1024) {
+      openModal({ title: 'Dosya Çok Büyük', message: 'QR görseli 3 MB\'tan küçük olmalı. Daha küçük bir görsel kullanın.', alertOnly: true });
+      return;
+    }
+    const rd = new FileReader();
+    rd.onload = () => {
+      state.qrImage = String(rd.result);
+      saveState(); render();
+    };
+    rd.onerror = () => openModal({ title: 'Okunamadı', message: 'Görsel okunamadı.', alertOnly: true });
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+function qrGorseliSil() {
+  openModal({
+    title: 'QR Görselini Kaldır', message: 'Yüklenen QR görseli silinsin mi?',
+    confirmText: 'KALDIR', danger: true,
+    onConfirm: () => { state.qrImage = ''; saveState(); render(); }
+  });
+}
+
+function kopyala(metin) {
+  const bildir = ok => openModal({ title: ok ? 'Kopyalandı' : 'Kopyalanamadı', message: ok ? 'Adres panoya kopyalandı.' : 'Tarayıcı izin vermedi; adresi elle seçip kopyalayın.', alertOnly: true });
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(metin).then(() => bildir(true)).catch(() => bildir(false));
+  } else bildir(false);
+}
+
+function render() {
+  if (route === 'takip') renderFollow();
+  else if (route === 'qr') renderQr();
+  else renderControl();
+}
+
+/* ---------- 8) EKRANLAR ARASI GEÇİŞ ---------- */
+
+function openFollow() {
+  const url = `${location.href.split('#')[0]}#takip`;
+  let p = null;
+  try { p = window.open(url, '_blank'); } catch (e) { p = null; }
+  if (p && !p.closed) return;
+  openModal({
+    title: 'Takip Ekranı', message: 'Tarayıcı yeni sekme açmayı engelledi. Bu sekmede açılsın mı?',
+    confirmText: 'BU SEKMEDE AÇ',
+    onConfirm: () => { location.hash = '#takip'; applyRoute(); }
+  });
+}
+function closeFollow() { location.hash = ''; applyRoute(); }
+function openQr() { location.hash = '#qr'; applyRoute(); }
+function closeQr() { location.hash = ''; applyRoute(); }
+
+function applyRoute() {
+  const h = (location.hash || '').toLowerCase();
+  route = h === '#takip' ? 'takip' : (h === '#qr' ? 'qr' : 'kontrol');
+  if (route !== 'takip') stopPolling();
+  state = loadState();
+  render();
+}
+
+/* Takip ekranı, kontrol panelindeki değişiklikleri yansıtır. */
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(() => {
+    const yeni = loadState();
+    if (JSON.stringify(yeni.schedule) !== JSON.stringify(state.schedule) ||
+        JSON.stringify(yeni.tables) !== JSON.stringify(state.tables)) {
+      state = yeni; render(); return;
+    }
+    // Sayaçlar kontrol panelinde işliyor; takip ekranı değerleri okur.
+    state.live = yeni.live;
+    refreshCounters();
+  }, 1000);
+}
+function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+/* ---------- 9) MODAL ---------- */
+
+function closeModal() {
+  document.getElementById('modalOverlay')?.remove();
+  document.removeEventListener('keydown', modalKey);
+}
+function modalKey(e) { if (e.key === 'Escape') closeModal(); }
+
+function openModal(o) {
+  const { title = '', message = '', showInput = false, inputValue = '', confirmText = 'TAMAM',
+          cancelText = 'VAZGEÇ', danger = false, alertOnly = false, onConfirm = null,
+          bodyHtml = '', onOpen = null, wide = false } = o || {};
+  closeModal();
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay'; ov.id = 'modalOverlay';
+  ov.innerHTML = `<div class="modal-box${wide ? ' wide' : ''}" role="dialog" aria-modal="true">
+    <div class="modal-header"><h3>${esc(title)}</h3></div>
+    <div class="modal-body">
+      ${message ? `<p>${esc(message)}</p>` : ''}
+      ${showInput ? `<input id="modalInput" type="text" value="${esc(inputValue)}" autocomplete="off">` : ''}
+      ${bodyHtml}
+    </div>
+    <div class="modal-actions">
+      ${alertOnly ? '' : `<button type="button" class="ghost" id="modalCancel">${esc(cancelText)}</button>`}
+      <button type="button" class="${danger ? 'red' : ''}" id="modalConfirm">${esc(confirmText)}</button>
+    </div></div>`;
+  document.getElementById('modalRoot').appendChild(ov);
+  ov.addEventListener('mousedown', e => { if (e.target === ov) closeModal(); });
+
+  const c = document.getElementById('modalConfirm');
+  const inp = document.getElementById('modalInput');
+  c.addEventListener('click', () => { const v = inp ? inp.value : true; closeModal(); if (onConfirm) onConfirm(v); });
+  document.getElementById('modalCancel')?.addEventListener('click', closeModal);
+  document.addEventListener('keydown', modalKey);
+  if (inp) { inp.addEventListener('keydown', e => { if (e.key === 'Enter') c.click(); }); setTimeout(() => { inp.focus(); inp.select(); }, 0); }
+  else setTimeout(() => c.focus(), 0);
+  if (typeof onOpen === 'function') onOpen(ov);
+}
+
+/* ---------- 10) KAYDET / PAYLAŞ ---------- */
+
+function indirDosya(icerik, ad, tur) {
+  const url = URL.createObjectURL(new Blob([icerik], { type: tur }));
+  const a = document.createElement('a');
+  a.href = url; a.download = ad;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* Uygulamayı, o anki verileri içine gömerek tek HTML dosyası yapar. */
+function buildStandalone() {
+  const k = document.documentElement.cloneNode(true);
+  k.querySelector('#app').innerHTML = '';
+  k.querySelector('#modalRoot').innerHTML = '';
+  k.querySelectorAll('script[data-embedded]').forEach(e => e.remove());
+  const damga = String(Date.now());
+  const s = k.ownerDocument.createElement('script');
+  s.setAttribute('data-embedded', damga);
+  const govde = JSON.stringify({ stamp: damga, data: state }).split('</').join('<\\/');
+  s.textContent = 'window.__GOMULU__ = ' + govde + ';';
+  k.querySelector('head').appendChild(s);
+  return '<!DOCTYPE html>\n' + k.outerHTML;
+}
+
+function openShare() {
+  openModal({
+    title: 'Kaydet / Başka Bilgisayarda Aç', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      <div style="border:1px solid var(--blue);border-radius:10px;padding:12px;background:rgba(52,87,213,.06);display:flex;flex-direction:column;gap:10px">
+        <div class="section-label">Sayfayı verilerle indir (önerilen)</div>
+        <p class="hint">Uygulamanın tamamını, mevcut talepler ve program içine gömülü hâlde tek bir HTML dosyası olarak indirir. Başka bilgisayarda çift tıklayıp açmanız yeterli — sunucu veya internet gerekmez.</p>
+        <div class="row"><button type="button" class="green" id="dlHtml">⬇ SAYFAYI VERİLERLE İNDİR (.html)</button><span id="dlStat" style="font-size:12px;font-weight:600"></span></div>
+      </div>
+      <details class="collapsible"><summary>Diğer</summary><div class="collapsible-body">
+        <div class="row">
+          <button type="button" class="secondary" id="dlJson">VERİ DOSYASI İNDİR (.json)</button>
+          <button type="button" class="secondary" id="upJson">VERİ DOSYASI YÜKLE</button>
         </div>
-      `;
-    }
-
-    function renderFollowScreen() {
-      document.body.classList.add('follow-mode');
-      startTicking();
-      startFollowPolling();
-      state = loadState(true);
-
-      document.getElementById('app').innerHTML = `
-        <main class="follow-screen">
-          ${renderHallCanvas('follow')}
-          <button type="button" class="follow-exit" onclick="closeFollowScreen()">← KONTROL PANELİ</button>
-        </main>
-      `;
-
-      refreshDynamicDisplays();
-      updateTitleBlink();
-    }
-
-    function openFollowScreen() {
-      // Sunucudaki her yol biçiminde (kök, alt klasör, dosya adı)
-      // doğru adresi üretmek için mevcut adresin hash'i değiştirilir.
-      const url = `${window.location.href.split('#')[0]}#takip`;
-      let popup = null;
-      try { popup = window.open(url, '_blank'); } catch (error) {}
-      if (popup && !popup.closed) { try { popup.focus(); } catch (error) {} return; }
-      openModal({
-        title: 'Takip Ekranı',
-        message: 'Tarayıcı yeni sekme açmayı engelledi. Takip ekranını bu sekmede açabilirsiniz.',
-        confirmText: 'BU SEKMEDE AÇ',
-        onConfirm: () => { window.location.hash = '#takip'; route(); }
-      });
-    }
-    function closeFollowScreen() { window.location.hash = ''; route(); }
-
-    function selectTable(id) {
-      selectedId = id; state.selectedId = id; saveState(); renderControlPanel();
-    }
-
-    function toggleEditMode() {
-      isEditMode = !isEditMode;
-      if (!isEditMode) {
-        const t = getTable(selectedId);
-        if (t && t.kind === 'shape') {
-          selectedId = state.tables.find(tbl => tbl.kind === 'meeting')?.id || firstTableId();
-          state.selectedId = selectedId;
-        }
-      }
-      saveState();
-      renderControlPanel();
-    }
-
-    function addShape(type) {
-      state = loadState(true);
-      const id = makeId('s');
-      state.tables.push({
-        id, kind: 'shape', shape: type, text: type === 'rect' ? 'Yeni Alan' : 'Masa',
-        x: 40, y: 40, w: 15, h: 10, bgColor: '#E6EAF2', textColor: '#1B2230'
-      });
-      selectedId = id; saveState(); renderControlPanel();
-    }
-
-    function applySelectedShape() {
-      const table = getSelectedTable();
-      if (!table || table.kind !== 'shape') return;
-      table.text = document.getElementById('shapeText')?.value || '';
-      table.w = Math.max(2, Math.min(100, Number(document.getElementById('shapeW')?.value) || table.w));
-      table.h = Math.max(2, Math.min(100, Number(document.getElementById('shapeH')?.value) || table.h));
-      table.bgColor = document.getElementById('shapeBg')?.value || table.bgColor;
-      table.textColor = document.getElementById('shapeTextCol')?.value || table.textColor;
-      saveState(); renderControlPanel();
-    }
-
-    function addMeetingTable() {
-      state = loadState(true);
-      const meetings = state.tables.filter(t => t.kind === 'meeting');
-      const meetingCount = meetings.length;
-      const totalCount = meetingCount + 1;
-      const id = makeId('m');
-      const size = getAutoMeetingSize(totalCount);
-      const position = getAutoMeetingPosition(meetingCount, totalCount);
-      state.tables.push({
-        id, kind: 'meeting', title: `MASA - ${totalCount}`, shape: 'rect',
-        x: position.x, y: position.y, w: size.w, h: size.h,
-        onceki: '', firma: '', saniye: DEFAULT_SECONDS, running: false, duration: 15, updatedAt: Date.now(), queue: []
-      });
-      applyAutoMeetingSizing(state);
-      selectedId = id; saveState(); renderControlPanel();
-    }
-
-    function applySelectedMeeting() {
-      const table = getSelectedTable();
-      if (!table || table.kind !== 'meeting') return;
-      table.title = document.getElementById('selTitle')?.value.trim() || table.title;
-      table.duration = Number.isFinite(Number(document.getElementById('selDuration')?.value)) && Number(document.getElementById('selDuration')?.value) > 0 ? Number(document.getElementById('selDuration')?.value) : table.duration;
-      applyAutoMeetingSizing(state);
-      table.saniye = Math.round(table.duration * 60);
-      table.updatedAt = Date.now();
-      saveState(); renderControlPanel();
-    }
-
-    function deleteSelectedTable() {
-      const table = getSelectedTable();
-      if (!table) return;
-      if (table.kind === 'meeting' && state.tables.filter(t => t.kind === 'meeting').length <= 1) {
-        openModal({ title: 'Silinemiyor', message: 'En az bir toplantı masası kalmalı.', alertOnly: true }); return;
-      }
-      openModal({
-        title: table.kind === 'shape' ? 'Şekli Sil' : 'Masayı Sil',
-        message: `${table.kind === 'shape' ? (table.text || 'Şekil') : table.title} silinsin mi?`,
-        confirmText: 'SİL', danger: true,
-        onConfirm: () => {
-          state.tables = state.tables.filter(t => t.id !== table.id);
-          selectedId = state.tables[0]?.id; saveState(); renderControlPanel();
-        }
-      });
-    }
-
-    function startMeeting(id) {
-      state = loadState(true);
-      const table = getTable(id);
-      if (!table || table.kind !== 'meeting') return;
-      table.running = true; table.updatedAt = Date.now(); saveState(); renderControlPanel();
-    }
-
-    function stopMeeting(id) {
-      state = loadState(true);
-      const table = getTable(id);
-      if (!table || table.kind !== 'meeting') return;
-      table.running = false; saveState(); renderControlPanel();
-    }
-
-    function startAllMeetings() {
-      state = loadState(true);
-      let changed = false;
-      state.tables.forEach(table => {
-        if (table.kind === 'meeting' && !table.running) { table.running = true; table.updatedAt = Date.now(); changed = true; }
-      });
-      if (changed) { saveState(); renderControlPanel(); }
-    }
-
-    function stopAllMeetings() {
-      state = loadState(true);
-      let changed = false;
-      state.tables.forEach(table => {
-        if (table.kind === 'meeting' && table.running) { table.running = false; changed = true; }
-      });
-      if (changed) { saveState(); renderControlPanel(); }
-    }
-
-    function setAllDurations() {
-      openModal({
-        title: 'Tüm Masaların Süresini Kur',
-        message: 'Tüm masalar için geçerli olacak süreyi (dakika) girin:',
-        showInput: true, inputValue: '15', inputPlaceholder: 'Örn: 15', confirmText: 'SÜREYİ KUR',
-        onConfirm: (value) => {
-          const duration = Number(value);
-          if (!Number.isFinite(duration) || duration <= 0) {
-            openModal({ title: 'Hata', message: 'Lütfen geçerli bir süre (dakika) girin.', alertOnly: true }); return;
-          }
-          state = loadState(true);
-          let changed = false;
-          state.tables.forEach(table => {
-            if (table.kind === 'meeting') {
-              table.duration = duration; table.saniye = Math.round(duration * 60);
-              table.running = false; table.updatedAt = Date.now(); changed = true;
-            }
-          });
-          if (changed) { saveState(); renderControlPanel(); }
-        }
-      });
-    }
-
-    function nextMeeting(id) {
-      state = loadState(true);
-      const table = getTable(id);
-      if (!table || table.kind !== 'meeting') return;
-      const queuedName = table.queue.shift();
-      if (queuedName) { advanceMeeting(table, queuedName); return; }
-      openModal({
-        title: 'Sıradaki Firma', message: 'Bu masanın sırasında firma yok. Yeni mevcut firma adı:',
-        showInput: true, inputPlaceholder: 'Firma adı', confirmText: 'DEVAM ET',
-        onConfirm: (value) => { const name = String(value || '').trim(); if (name) advanceMeeting(table, name); }
-      });
-    }
-
-    function advanceMeeting(table, nextName) {
-      table.onceki = table.firma; table.firma = nextName; table.saniye = Math.round(table.duration * 60);
-      table.running = false; table.updatedAt = Date.now(); saveState(); renderControlPanel();
-    }
-
-    function moveQueueItem(id, index, direction) {
-      const table = getTable(id); if (!table || table.kind !== 'meeting') return;
-      const target = index + direction; if (target < 0 || target >= table.queue.length) return;
-      const [item] = table.queue.splice(index, 1); table.queue.splice(target, 0, item);
-      saveState(); renderControlPanel();
-    }
-
-    function removeQueueItem(id, index, returnToPool) {
-      const table = getTable(id); if (!table || table.kind !== 'meeting') return;
-      const [name] = table.queue.splice(index, 1);
-      if (returnToPool && name) state.participants.push({ id: makeId('p'), name });
-      saveState(); renderControlPanel();
-    }
-
-    function editQueueItem(id, index) {
-      const table = getTable(id); if (!table || table.kind !== 'meeting') return;
-      if (table.queue[index] === undefined) return;
-      openModal({
-        title: 'Sıradaki Firmayı Düzenle', message: 'Firma adını düzeltin:', showInput: true,
-        inputValue: table.queue[index], confirmText: 'KAYDET',
-        onConfirm: (value) => {
-          const name = String(value || '').trim(); if (!name) return;
-          const target = getTable(id); if (target && target.queue[index] !== undefined) { target.queue[index] = name; saveState(); renderControlPanel(); }
-        }
-      });
-    }
-
-    function editCurrentCompany(id) {
-      const table = getTable(id); if (!table || table.kind !== 'meeting') return;
-      openModal({
-        title: 'Görüşülen Firmayı Düzenle', message: 'Masada şu an görüşülen firma adı:', showInput: true,
-        inputValue: String(table.firma || ''), inputPlaceholder: 'Firma adı', confirmText: 'KAYDET',
-        onConfirm: (value) => { const target = getTable(id); if (target) { target.firma = String(value || '').trim(); target.updatedAt = Date.now(); saveState(); renderControlPanel(); } }
-      });
-    }
-
-    /* Bir hücrenin saat olup olmadığını anlar ve HH:MM biçimine çevirir.
-       Excel'in ürettiği "9:00", "09.00", "09:00:00", "9:00 AM" gibi
-       yazımların hepsi kabul edilir. Saat değilse null döner. */
-    function parseClockCell(value) {
-      const ham = String(value || '').trim();
-      if (!ham) return null;
-      const m = ham.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*(AM|PM|ÖÖ|ÖS)?$/i);
-      if (!m) return null;
-      let saat = Number(m[1]);
-      const dakika = Number(m[2]);
-      if (!Number.isFinite(saat) || !Number.isFinite(dakika) || dakika > 59) return null;
-      const ek = (m[3] || '').toUpperCase();
-      if (ek === 'PM' || ek === 'ÖS') { if (saat < 12) saat += 12; }
-      if (ek === 'AM' || ek === 'ÖÖ') { if (saat === 12) saat = 0; }
-      if (saat > 23) return null;
-      return `${String(saat).padStart(2, '0')}:${String(dakika).padStart(2, '0')}`;
-    }
-
-    /* Excel'den yapıştırılan metni satır satır ayrıştırır.
-       Bir satırda birden çok sütun varsa (tab / noktalı virgül / virgül),
-       saat biçimindeki sütun görüşme saati, kalan metin katılımcı adı
-       olarak alınır. Saat sütunu yoksa katılımcının saati boş kalır ve
-       sırasına göre otomatik hesaplanır. */
-    function parseParticipants(text) {
-      return String(text || '')
-        .split(/[\r\n]+/)
-        .map(satir => {
-          const hucreler = satir.split(/[\t;,]/).map(h => h.trim()).filter(Boolean);
-          if (!hucreler.length) return null;
-
-          let clock = null;
-          const adParcalari = [];
-          hucreler.forEach(hucre => {
-            const saat = parseClockCell(hucre);
-            if (saat && !clock) clock = saat;
-            else adParcalari.push(hucre);
-          });
-
-          const name = adParcalari.join(' ').trim();
-          if (!name) return null;
-          return { name, clock };
-        })
-        .filter(Boolean);
-    }
-
-    function addParsedParticipants(kayitlar) {
-      if (!kayitlar.length) return false;
-      kayitlar.forEach(({ name, clock }) => {
-        state.participants.push({ id: makeId('p'), name, clock: clock || null });
-      });
-      saveState(); renderControlPanel();
-      return true;
-    }
-
-    function importParticipants() {
-      addParsedParticipants(parseParticipants(document.getElementById('pasteBox')?.value || ''));
-    }
-    function pasteParticipantsFromClipboard(event) {
-      const kayitlar = parseParticipants(event.clipboardData?.getData('text/plain') || '');
-      if (!kayitlar.length) return;
-      event.preventDefault();
-      addParsedParticipants(kayitlar);
-    }
-    function addManualParticipant() {
-      const name = document.getElementById('manualParticipant')?.value.trim();
-      if (!name) return;
-      state.participants.push({ id: makeId('p'), name });
-      saveState(); renderControlPanel();
-    }
-    /* ------------------------------------------------------------
-       Katılımcı sütununda çoklu seçim ve toplu aktarma
-       ------------------------------------------------------------ */
-    function toggleParticipantSelection(id, secili) {
-      if (secili) selectedParticipantIds.add(id); else selectedParticipantIds.delete(id);
-      renderControlPanel();
-    }
-
-    function toggleAllParticipants(secili) {
-      selectedParticipantIds.clear();
-      if (secili) state.participants.forEach(p => selectedParticipantIds.add(p.id));
-      renderControlPanel();
-    }
-
-    function clearParticipantSelection() {
-      selectedParticipantIds.clear();
-      renderControlPanel();
-    }
-
-    /* Seçili katılımcıları, sütundaki sıralarını koruyarak seçili
-       masanın sırasının sonuna ekler ve sütundan çıkarır. */
-    function moveSelectedToQueue() {
-      if (!selectedParticipantIds.size) return;
-      state = loadState(true);
-      const table = getTable(selectedId);
-      if (!table || table.kind !== 'meeting') return;
-
-      const tasinacak = state.participants.filter(p => selectedParticipantIds.has(p.id));
-      if (!tasinacak.length) return;
-
-      tasinacak.forEach(p => {
-        table.queue.push(p.name);
-        // Excel'den gelen sabit saat masada da korunsun
-        if (p.clock) {
-          state.fixedClocks = state.fixedClocks || {};
-          state.fixedClocks[p.name] = p.clock;
-        }
-      });
-
-      state.participants = state.participants.filter(p => !selectedParticipantIds.has(p.id));
-      selectedParticipantIds.clear();
-      saveState();
-      renderControlPanel();
-    }
-
-    function editParticipant(id) {
-      const p = state.participants.find(x => x.id === id); if (!p) return;
-      openModal({
-        title: 'Katılımcıyı Düzenle', message: 'Katılımcı / firma adını düzeltin:', showInput: true, inputValue: p.name, confirmText: 'KAYDET',
-        onConfirm: (value) => { const n = String(value || '').trim(); if (n) { const t = state.participants.find(x => x.id === id); if (t) { t.name = n; saveState(); renderControlPanel(); } } }
-      });
-    }
-    /* Katılımcının sabit görüşme saatini düzenler. Boş bırakılırsa
-       sabit saat kaldırılır ve saat yeniden sıraya göre hesaplanır. */
-    function editParticipantClock(id) {
-      const p = state.participants.find(x => x.id === id);
-      if (!p) return;
-      openModal({
-        title: 'Görüşme Saati',
-        message: 'Saati SS:DD biçiminde girin. Boş bırakırsanız sıraya göre otomatik hesaplanır.',
-        showInput: true,
-        inputValue: p.clock || '',
-        inputPlaceholder: 'örn. 09:30',
-        confirmText: 'KAYDET',
-        onConfirm: (value) => {
-          const ham = String(value || '').trim();
-          const hedef = state.participants.find(x => x.id === id);
-          if (!hedef) return;
-          if (!ham) {
-            hedef.clock = null;
-            if (state.fixedClocks) delete state.fixedClocks[hedef.name];
-            saveState(); renderControlPanel(); return;
-          }
-          const saat = parseClockCell(ham);
-          if (!saat) {
-            openModal({ title: 'Geçersiz Saat', message: 'Saati SS:DD biçiminde girin (örn. 09:30).', alertOnly: true });
-            return;
-          }
-          hedef.clock = saat;
-          state.fixedClocks = state.fixedClocks || {};
-          state.fixedClocks[hedef.name] = saat;
-          saveState(); renderControlPanel();
-        }
-      });
-    }
-
-    function applyStartTime() {
-      const value = document.getElementById('startTime')?.value;
-      if (!/^\d{2}:\d{2}$/.test(String(value || ''))) return;
-      state = loadState(true);
-      state.startTime = value;
-      saveState();
-      renderControlPanel();
-    }
-
-    function removeParticipant(id) {
-      const idx = state.participants.findIndex(p => p.id === id); if (idx === -1) return;
-      state.participants.splice(idx, 1); saveState(); renderControlPanel();
-    }
-    function clearParticipantsConfirm() {
-      if (!state.participants.length) return;
-      openModal({ title: 'Sütunu Temizle', message: 'Katılımcı sütunu temizlensin mi?', confirmText: 'TEMİZLE', danger: true, onConfirm: () => { state.participants = []; saveState(); renderControlPanel(); } });
-    }
-
-    function dragParticipant(event, id, index) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('application/json', JSON.stringify({ type: 'participant', participantId: id, index }));
-    }
-
-    /* Katılımcı sütununda sürükleyerek sıralama. Sürüklenen hücre,
-       üzerine bırakıldığı hücrenin üst ya da alt yarısına göre o
-       satırın önüne veya arkasına taşınır. */
-    function allowParticipantReorder(event, index) {
-      event.preventDefault();
-      event.stopPropagation();
-      const cell = event.currentTarget;
-      const rect = cell.getBoundingClientRect();
-      const altYariya = event.clientY > rect.top + rect.height / 2;
-      document.querySelectorAll('.participant-cell').forEach(el => el.classList.remove('drop-above', 'drop-below'));
-      cell.classList.add(altYariya ? 'drop-below' : 'drop-above');
-    }
-
-    function clearReorderMark(event) {
-      event.currentTarget.classList.remove('drop-above', 'drop-below');
-    }
-
-    function dropParticipantReorder(event, targetIndex) {
-      event.preventDefault();
-      event.stopPropagation();
-      document.querySelectorAll('.participant-cell').forEach(el => el.classList.remove('drop-above', 'drop-below'));
-
-      const payload = readDragPayload(event);
-      state = loadState(true);
-
-      // Masa sırasından geri sürüklenmişse belirli konuma yerleştir.
-      if (payload && payload.type === 'queue') {
-        const name = consumeDraggedName(payload);
-        if (!name) return;
-        const rect = event.currentTarget.getBoundingClientRect();
-        const yer = event.clientY > rect.top + rect.height / 2 ? targetIndex + 1 : targetIndex;
-        state.participants.splice(yer, 0, { id: makeId('p'), name });
-        saveState();
-        renderControlPanel();
-        return;
-      }
-
-      if (!payload || payload.type !== 'participant') return;
-      const from = state.participants.findIndex(p => p.id === payload.participantId);
-      if (from < 0) return;
-
-      const rect = event.currentTarget.getBoundingClientRect();
-      let to = event.clientY > rect.top + rect.height / 2 ? targetIndex + 1 : targetIndex;
-      if (from < to) to -= 1;
-      if (from === to) return;
-
-      const [item] = state.participants.splice(from, 1);
-      state.participants.splice(to, 0, item);
-      saveState();
-      renderControlPanel();
-    }
-    function dragQueueItem(event, tableId, index) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/json', JSON.stringify({ type: 'queue', tableId, index })); }
-    function readDragPayload(event) { try { return JSON.parse(event.dataTransfer.getData('application/json') || 'null'); } catch (e) { return null; } }
-    
-    function allowTableDrop(event) { event.preventDefault(); }
-    function allowQueueDrop(event) { event.preventDefault(); event.currentTarget.classList.add('drop-ready'); }
-    function allowCanvasDrop(event) { event.preventDefault(); }
-    function allowParticipantReturn(event) { event.preventDefault(); }
-    function markDropReady(event, id) { event.preventDefault(); document.querySelector(`[data-table-id="${CSS.escape(id)}"]`)?.classList.add('drop-ready'); }
-    function unmarkDropReady(event, id) { document.querySelector(`[data-table-id="${CSS.escape(id)}"]`)?.classList.remove('drop-ready'); }
-
-    function consumeDraggedName(payload) {
-      if (!payload) return '';
-      if (payload.type === 'participant') {
-        const idx = state.participants.findIndex(p => p.id === payload.participantId);
-        if (idx < 0) return '';
-        return state.participants.splice(idx, 1)[0].name;
-      }
-      if (payload.type === 'queue') {
-        const src = getTable(payload.tableId);
-        if (!src || src.kind !== 'meeting' || payload.index < 0 || payload.index >= src.queue.length) return '';
-        return src.queue.splice(payload.index, 1)[0];
-      }
-      return '';
-    }
-
-    function dropParticipantToTable(event, tableId) {
-      event.preventDefault(); document.querySelectorAll('.drop-ready').forEach(el => el.classList.remove('drop-ready'));
-      state = loadState(true);
-      const table = getTable(tableId); if (!table || table.kind !== 'meeting') return;
-      const name = consumeDraggedName(readDragPayload(event)); if (!name) return;
-      table.queue.push(name); selectedId = tableId; saveState(); renderControlPanel();
-    }
-
-    function dropParticipantToQueue(event, tableId) {
-      event.preventDefault(); document.getElementById('queueList')?.classList.remove('drop-ready');
-      dropParticipantToTable(event, tableId);
-    }
-
-    function dropQueueToParticipants(event) {
-      event.preventDefault(); state = loadState(true);
-      const payload = readDragPayload(event); if (!payload || payload.type !== 'queue') return;
-      const name = consumeDraggedName(payload); if (!name) return;
-      state.participants.push({ id: makeId('p'), name }); saveState(); renderControlPanel();
-    }
-
-    function dropOnCanvas(event) { event.preventDefault(); document.querySelectorAll('.drop-ready').forEach(el => el.classList.remove('drop-ready')); }
-
-    function bindLayoutDragging() {
-      const canvas = document.getElementById('hallCanvas'); if (!canvas || getRoute() === 'takip') return;
-      canvas.querySelectorAll('.layout-item').forEach((item) => {
-        item.addEventListener('pointerdown', (event) => {
-          if (event.button !== 0 || event.target.closest('button, input, textarea, select')) return;
-          const id = item.dataset.tableId; const table = getTable(id); if (!table) return;
-          if (table.kind === 'shape' && !isEditMode) return; 
-
-          selectedId = id; state.selectedId = id; writeState(state);
-          const rect = canvas.getBoundingClientRect(); const itemRect = item.getBoundingClientRect();
-          draggingLayout = { id, canvas, rect, pointerOffsetX: event.clientX - itemRect.left, pointerOffsetY: event.clientY - itemRect.top };
-          item.setPointerCapture(event.pointerId); item.classList.add('selected'); event.preventDefault();
-        });
-
-        item.addEventListener('pointermove', (event) => {
-          if (!draggingLayout || draggingLayout.id !== item.dataset.tableId) return;
-          const table = getTable(draggingLayout.id); if (!table) return;
-          const { rect, pointerOffsetX, pointerOffsetY } = draggingLayout;
-          let x = ((event.clientX - rect.left - pointerOffsetX) / rect.width) * 100;
-          let y = ((event.clientY - rect.top - pointerOffsetY) / rect.height) * 100;
-          if (table.kind === 'meeting') {
-            x = snap(Math.min(MEETING_AUTO_AREA.x + MEETING_AUTO_AREA.w - table.w, Math.max(MEETING_AUTO_AREA.x, x)));
-            y = snap(Math.min(MEETING_AUTO_AREA.y + MEETING_AUTO_AREA.h - table.h, Math.max(MEETING_AUTO_AREA.y, y)));
-          } else {
-            x = snap(Math.min(100 - table.w, Math.max(0, x)));
-            y = snap(Math.min(100 - table.h, Math.max(0, y)));
-          }
-          item.style.left = `${x}%`; item.style.top = `${y}%`; table.x = x; table.y = y;
-        });
-
-        item.addEventListener('pointerup', (event) => {
-          if (!draggingLayout || draggingLayout.id !== item.dataset.tableId) return;
-          draggingLayout = null; try { item.releasePointerCapture(event.pointerId); } catch (e) {}
-          saveState(); renderControlPanel();
-        });
-
-        item.addEventListener('pointercancel', () => {
-          if (!draggingLayout || draggingLayout.id !== item.dataset.tableId) return;
-          draggingLayout = null; saveState(); renderControlPanel();
-        });
-      });
-    }
-
-    function snap(value) { return Math.round(value / SNAP_STEP) * SNAP_STEP; }
-
-    function refreshDynamicDisplays() {
-      state = loadState(true);
-      document.querySelectorAll('[data-time-id]').forEach((el) => {
-        const table = getTable(el.dataset.timeId); if (!table) return;
-        el.textContent = formatTime(table.saniye); el.style.color = getTimeColor(table.saniye);
-      });
-      document.querySelectorAll('[data-company-id]').forEach((el) => {
-        const table = getTable(el.dataset.companyId); if (table) el.innerHTML = displayValue(table.firma);
-      });
-      document.querySelectorAll('[data-queue-preview-id]').forEach((el) => {
-        const table = getTable(el.dataset.queuePreviewId); if (table) el.innerHTML = renderQueuePreview(table);
-      });
-      const selectedTime = document.getElementById('selectedTime');
-      const table = getSelectedTable();
-      if (selectedTime && table?.kind === 'meeting') {
-        selectedTime.textContent = formatTime(table.saniye); selectedTime.style.color = getTimeColor(table.saniye);
-      }
-      updateTitleBlink();
-    }
-
-    function startTicking() {
-      if (tickTimer) return;
-      tickTimer = setInterval(() => {
-        const before = JSON.stringify(state.tables.filter(t => t.kind === 'meeting').map(t => [t.id, t.saniye, t.running, t.updatedAt]));
-        state = loadState(true);
-        const after = JSON.stringify(state.tables.filter(t => t.kind === 'meeting').map(t => [t.id, t.saniye, t.running, t.updatedAt]));
-        if (before !== after) refreshDynamicDisplays();
-      }, 500);
-    }
-    function stopTicking() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
-
-    function startFollowPolling() {
-      if (followPollTimer) clearInterval(followPollTimer);
-      followPollTimer = setInterval(() => {
-        if (getRoute() !== 'takip') return;
-        const prevSig = layoutSignature(state); state = loadState(true);
-        if (prevSig !== layoutSignature(state)) renderFollowScreen(); else refreshDynamicDisplays();
-      }, 500);
-    }
-    function stopFollowPolling() { if (followPollTimer) { clearInterval(followPollTimer); followPollTimer = null; } }
-
-    function layoutSignature(currentState) {
-      return JSON.stringify(currentState.tables.map(t => ({
-        id: t.id, kind: t.kind, title: t.title, shape: t.shape, x: t.x, y: t.y, w: t.w, h: t.h,
-        firma: t.firma, onceki: t.onceki, q: Array.isArray(t.queue) ? t.queue.slice(0, 3) : [], running: t.running
-      })));
-    }
-
-    function isAnyDeskCritical() { return state.tables.some(t => t.kind === 'meeting' && Number(t.saniye) < 60); }
-    function updateTitleBlink() {
-      if (getRoute() !== 'takip' || !isAnyDeskCritical()) { stopTitleBlink(); return; }
-      if (titleBlinkTimer) return;
-      titleBlinkTimer = setInterval(() => { titleBlinkOn = !titleBlinkOn; document.title = titleBlinkOn ? '⚠ SÜRE KRİTİK' : originalTitle; }, 650);
-    }
-    function stopTitleBlink() { if (titleBlinkTimer) { clearInterval(titleBlinkTimer); titleBlinkTimer = null; } titleBlinkOn = false; document.title = originalTitle; }
-
-    function resetAllConfirm() {
-      openModal({ title: 'Sıfırla', message: 'Tüm salon planı, sıralar ve katılımcı sütunu varsayılana dönsün mü?', confirmText: 'SIFIRLA', danger: true, onConfirm: () => { state = defaultState(); selectedId = state.selectedId; writeState(state); route(); } });
-    }
-
-    /* Yalnızca salon yerleşimini sıfırlar: eklenen şekiller silinir,
-       masalar varsayılan ızgara düzenine döner. Firma adları, sıralar,
-       katılımcı sütunu ve saatler korunur. */
-    function resetLayoutConfirm() {
-      openModal({
-        title: 'Yerleşimi Sıfırla',
-        message: 'Salondaki tüm masalar ve şekiller silinecek. Katılımcı sütunu, saatler ve etkinlik ayarları korunur. Devam edilsin mi?',
-        confirmText: 'YERLEŞİMİ SIFIRLA',
-        danger: true,
-        onConfirm: () => {
-          state = loadState(true);
-          state.tables = [];
-          state.layoutCount = 0;
-          selectedId = null;
-          state.selectedId = null;
-          isEditMode = true; // boş salonda hemen masa eklenebilsin
-          saveState();
-          renderControlPanel();
-        }
-      });
-    }
-
-    /* ============================================================
-       PLAN PAYLAŞIMI
-       Uygulamanın ortak sunucusu yoktur; veriler her tarayıcının
-       kendi yerel deposunda durur. Planı başka bilgisayarda açmak
-       için ya bir dosya olarak dışa aktarılır ya da tüm plan adresin
-       içine kodlanmış bir bağlantı üretilir.
-       ============================================================ */
-    function encodePlan(planState) {
-      const json = JSON.stringify(planState);
-      const bytes = new TextEncoder().encode(json);
-      let binary = '';
-      bytes.forEach(b => { binary += String.fromCharCode(b); });
-      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    }
-
-    function decodePlan(encoded) {
-      const normal = String(encoded).replace(/-/g, '+').replace(/_/g, '/');
-      const binary = atob(normal);
-      const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
-      return JSON.parse(new TextDecoder().decode(bytes));
-    }
-
-    function buildShareLink() {
-      return `${window.location.href.split('#')[0]}#plan=${encodePlan(state)}`;
-    }
-
-    function openShareDialog() {
-      const link = buildShareLink();
-      const cokUzun = link.length > 7000;
-
-      openModal({
-        title: 'Planı Başka Bilgisayarda Aç',
-        wide: true,
-        alertOnly: true,
-        confirmText: 'KAPAT',
-        bodyHtml: `
-          <div class="share-step primary">
-            <div class="share-step-title">Sayfayı planla birlikte indir (önerilen)</div>
-            <p class="share-desc">
-              Uygulamanın tamamını, şu anki planı içine gömülmüş hâlde tek bir HTML dosyası olarak indirir.
-              Dosyayı diğer bilgisayara kopyalayıp çift tıklamanız yeterlidir — kurulum, sunucu veya
-              internet gerekmez. Açıldığında tüm masalar, sıralar, katılımcılar ve saatler yerinde olur.
-            </p>
-            <div class="share-buttons">
-              <button type="button" class="green" id="shareHtml">⬇ SAYFAYI PLANLA İNDİR (.html)</button>
-              <span class="share-status" id="shareStatus"></span>
-            </div>
-          </div>
-
-          <details class="collapsible share-more">
-            <summary>Diğer yöntemler</summary>
-            <div class="collapsible-body">
-              <p class="share-desc">
-                <strong>Plan dosyası (.json)</strong> — Yalnızca verileri taşır. Diğer bilgisayarda
-                uygulama zaten kuruluysa "Yükle" ile içe aktarabilirsiniz.
-              </p>
-              <div class="share-buttons">
-                <button type="button" class="secondary" id="shareDownload">PLAN DOSYASI İNDİR</button>
-                <button type="button" class="secondary" id="shareUpload">PLAN DOSYASI YÜKLE</button>
-              </div>
-
-              <p class="share-desc" style="margin-top:12px">
-                <strong>Bağlantı</strong> — Yalnızca uygulama bir web adresinde yayındaysa çalışır.
-                ${cokUzun ? 'Planınız büyük olduğu için bu bağlantı çoğu tarayıcıda açılmayacaktır.' : 'Adresin tamamı kopyalanmalıdır.'}
-              </p>
-              <textarea id="shareLink" class="share-link" readonly rows="3">${escapeHtml(link)}</textarea>
-              <div class="share-buttons">
-                <button type="button" class="secondary" id="shareCopy">BAĞLANTIYI KOPYALA</button>
-              </div>
-            </div>
-          </details>
-        `,
-        onOpen: () => {
-          const durum = document.getElementById('shareStatus');
-          const kutu = document.getElementById('shareLink');
-          kutu?.addEventListener('focus', () => kutu.select());
-
-          document.getElementById('shareHtml')?.addEventListener('click', () => {
+        <button type="button" class="secondary" id="dlCsv">PROGRAMI CSV OLARAK İNDİR</button>
+      </div></details>`,
+    onOpen: () => {
+      const st = document.getElementById('dlStat');
+      document.getElementById('dlHtml').onclick = () => {
+        try { indirDosya(buildStandalone(), `b2b-${new Date().toISOString().slice(0, 10)}.html`, 'text/html;charset=utf-8'); st.textContent = 'İndirildi.'; st.style.color = 'var(--green)'; }
+        catch (e) { st.textContent = 'Hata: ' + e.message; st.style.color = 'var(--red)'; }
+      };
+      document.getElementById('dlJson').onclick = () => indirDosya(JSON.stringify(state, null, 2), 'b2b-veri.json', 'application/json');
+      document.getElementById('dlCsv').onclick = () => {
+        const satir = [['Saat', 'Masa', 'Firma 1', 'Firma 2', 'Süre (dk)']]
+          .concat(state.schedule.map(s => [`${fmtClock(s.start)}-${fmtClock(s.end)}`, s.tableTitle, s.from, s.to, s.duration]));
+        indirDosya('\ufeff' + satir.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n'), 'b2b-program.csv', 'text/csv;charset=utf-8');
+      };
+      document.getElementById('upJson').onclick = () => {
+        const i = document.createElement('input');
+        i.type = 'file'; i.accept = '.json,application/json';
+        i.onchange = () => {
+          const f = i.files?.[0]; if (!f) return;
+          const rd = new FileReader();
+          rd.onload = () => {
             try {
-              downloadStandalonePage();
-              if (durum) { durum.textContent = 'Dosya indirildi.'; durum.className = 'share-status ok'; }
-            } catch (error) {
-              if (durum) { durum.textContent = 'İndirilemedi: ' + error.message; durum.className = 'share-status err'; }
-            }
-          });
-          document.getElementById('shareDownload')?.addEventListener('click', downloadPlanFile);
-          document.getElementById('shareUpload')?.addEventListener('click', () => { closeModal(); openPlanFilePicker(); });
-          document.getElementById('shareCopy')?.addEventListener('click', () => {
-            copyToClipboard(link, (ok) => { if (!ok) { kutu?.focus(); kutu?.select(); } });
-          });
-        }
-      });
-    }
-
-    /* Panoya kopyalama. Güvenli olmayan (http) adreslerde
-       navigator.clipboard bulunmaz; bu durumda eski yönteme düşer. */
-    function copyToClipboard(text, sonuc) {
-      const bitir = (ok) => { if (typeof sonuc === 'function') sonuc(ok); };
-
-      if (navigator.clipboard?.writeText && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => bitir(true)).catch(() => bitir(eskiYontemleKopyala(text)));
-        return;
-      }
-      bitir(eskiYontemleKopyala(text));
-    }
-
-    function eskiYontemleKopyala(text) {
-      try {
-        const alan = document.createElement('textarea');
-        alan.value = text;
-        alan.setAttribute('readonly', '');
-        alan.style.position = 'fixed';
-        alan.style.top = '-1000px';
-        document.body.appendChild(alan);
-        alan.select();
-        const ok = document.execCommand('copy');
-        document.body.removeChild(alan);
-        return ok;
-      } catch (error) {
-        return false;
-      }
-    }
-
-    function indirDosya(icerik, dosyaAdi, tur) {
-      const blob = new Blob([icerik], { type: tur });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = dosyaAdi;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-
-    /* Uygulamanın tamamını, o anki planı içine gömerek tek bir HTML
-       dosyası olarak indirir. İnternet veya sunucu gerekmez; dosyayı
-       herhangi bir bilgisayarda çift tıklayıp açmak yeterlidir.
-       Sayfanın kendi kaynağı DOM'dan yeniden üretilir; çalışma anında
-       oluşan içerik (çizilmiş arayüz, açık pencereler) temizlenir. */
-    function buildStandalonePage() {
-      const kopya = document.documentElement.cloneNode(true);
-
-      // Çalışma anında doldurulan alanları boşalt
-      const app = kopya.querySelector('#app');
-      if (app) app.innerHTML = '';
-      const modalRoot = kopya.querySelector('#modalRoot');
-      if (modalRoot) modalRoot.innerHTML = '';
-
-      // Önceki bir gömülü planı temizle (üst üste binmesin)
-      kopya.querySelectorAll('script[data-embedded-plan]').forEach(el => el.remove());
-
-      const damga = `${Date.now()}`;
-      const gomulu = kopya.ownerDocument.createElement('script');
-      gomulu.setAttribute('data-embedded-plan', damga);
-      // Kapanış etiketi dizisi metin içinde kaçırılır, aksi halde script erken kapanır
-      const govde = JSON.stringify({ stamp: damga, plan: state }).split('</').join('<\\/');
-      gomulu.textContent = 'window.__GOMULU_PLAN__ = ' + govde + ';';
-      // Ana betik body sonunda çalıştığı için gömülü plan head'e konur;
-      // aksi halde uygulama başladığında plan henüz tanımlı olmaz.
-      kopya.querySelector('head')?.appendChild(gomulu);
-
-      return `<!DOCTYPE html>\n${kopya.outerHTML}`;
-    }
-
-    function downloadStandalonePage() {
-      const damga = new Date().toISOString().slice(0, 10);
-      indirDosya(buildStandalonePage(), `b2b-toplanti-plani-${damga}.html`, 'text/html;charset=utf-8');
-    }
-
-    function downloadPlanFile() {
-      indirDosya(JSON.stringify(state, null, 2), `b2b-plan-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
-    }
-
-    /* İndirilen HTML dosyası ilk kez açıldığında içindeki planı yükler.
-       Aynı dosya sonradan tekrar açıldığında kullanıcının o dosyada
-       yaptığı değişiklikler korunur; gömülü plan yeniden yazılmaz. */
-    function handleEmbeddedPlan() {
-      const gomulu = window.__GOMULU_PLAN__;
-      if (!gomulu || !gomulu.plan) return false;
-      const anahtar = 'b2b_embedded_' + gomulu.stamp;
-      try {
-        if (localStorage.getItem(anahtar)) return false;
-        localStorage.setItem(anahtar, '1');
-      } catch (error) { /* depolama yoksa her açılışta gömülü plan yüklenir */ }
-
-      state = normalizeState(gomulu.plan);
-      selectedId = state.selectedId || firstTableId();
-      writeState(state);
-      return true;
-    }
-
-    function openPlanFilePicker() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'application/json,.json';
-      input.addEventListener('change', () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          try { applyImportedPlan(JSON.parse(String(reader.result))); }
-          catch (error) { openModal({ title: 'Dosya Okunamadı', message: 'Seçilen dosya geçerli bir plan dosyası değil.', alertOnly: true }); }
+              const veri = normalizeState(JSON.parse(String(rd.result)));
+              closeModal();
+              openModal({
+                title: 'Veriyi Yükle', message: 'Bu bilgisayardaki mevcut veriler değiştirilecek. Devam edilsin mi?',
+                confirmText: 'YÜKLE', danger: true,
+                onConfirm: () => { state = veri; saveState(); render(); }
+              });
+            } catch (e) { openModal({ title: 'Okunamadı', message: 'Dosya geçerli değil.', alertOnly: true }); }
+          };
+          rd.readAsText(f);
         };
-        reader.readAsText(file);
-      });
-      input.click();
+        i.click();
+      };
     }
+  });
+}
 
-    function applyImportedPlan(raw) {
-      openModal({
-        title: 'Planı Yükle',
-        message: 'Bu bilgisayardaki mevcut plan, yüklenen planla değiştirilecek. Devam edilsin mi?',
-        confirmText: 'YÜKLE',
-        danger: true,
-        onConfirm: () => {
-          state = normalizeState(raw);
-          selectedId = state.selectedId || firstTableId();
-          writeState(state);
-          route();
-        }
-      });
-    }
+/* İndirilen dosya ilk açıldığında gömülü veriyi yükler. */
+function handleEmbedded() {
+  const g = window.__GOMULU__;
+  if (!g || !g.data) return;
+  const anahtar = 'b2b_emb_' + g.stamp;
+  try { if (localStorage.getItem(anahtar)) return; localStorage.setItem(anahtar, '1'); } catch (e) {}
+  state = normalizeState(g.data);
+  saveState();
+}
 
-    function handleSharedPlanInUrl() {
-      const hash = window.location.hash || '';
-      if (!hash.startsWith('#plan=')) return false;
-      let raw = null;
-      try { raw = decodePlan(hash.slice(6)); } catch (error) { raw = null; }
-      history.replaceState(null, '', window.location.href.split('#')[0]);
-      if (!raw) {
-        openModal({ title: 'Bağlantı Geçersiz', message: 'Paylaşılan plan okunamadı. Bağlantı eksik kopyalanmış olabilir.', alertOnly: true });
-        return false;
-      }
-      state = normalizeState(raw);
-      selectedId = state.selectedId || firstTableId();
-      writeState(state);
-      return true;
-    }
+/* ---------- BAŞLAT ---------- */
 
-    function route() {
-      state = loadState(true); selectedId = state.selectedId || selectedId || firstTableId();
-      stopFollowPolling();
-      if (getRoute() === 'takip') renderFollowScreen(); else renderControlPanel();
-    }
-
-    window.addEventListener('storage', (event) => { if (event.key === STORAGE_KEY) route(); });
-    window.addEventListener('hashchange', () => { handleSharedPlanInUrl(); route(); });
-    window.addEventListener('beforeunload', () => { stopFollowPolling(); stopTitleBlink(); stopTicking(); });
-
-    handleEmbeddedPlan();
-    handleSharedPlanInUrl();
-    route();
-  </script>
+state = loadState();
+handleEmbedded();
+state = loadState();
+applyRoute();
+window.addEventListener('hashchange', applyRoute);
+window.addEventListener('beforeunload', () => { if (tickTimer) clearInterval(tickTimer); stopPolling(); });
+</script>
 </body>
 </html>

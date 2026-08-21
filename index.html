@@ -136,6 +136,10 @@ details.collapsible[open]>summary::before{content:'▾ '}
 .unknown-row{border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;background:var(--card-alt);display:flex;flex-direction:column;gap:7px}
 .unknown-row select{font-size:12px;padding:5px 7px;flex:1;min-width:150px}
 .stat-row{display:flex;flex-wrap:wrap;gap:8px}
+.sync-box{border:1px solid var(--border-soft);border-radius:10px;padding:10px 12px;background:var(--card-alt)}
+.sync-box.on{border-color:var(--green);background:rgba(30,158,90,.06)}
+.sync-toggle{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600}
+.sync-toggle input{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
 .stat{flex:1;min-width:110px;border:1px solid var(--border-soft);border-radius:10px;padding:9px 11px;background:var(--card-alt)}
 .stat .k{color:var(--gray-dim);font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .stat .v{font-family:var(--font-mono);font-size:19px;font-weight:700;color:var(--blue)}
@@ -173,8 +177,10 @@ function defaultState() {
     eventName: '',
     formUrl: '',
     webAppUrl: '',   // Apps Script web uygulaması adresi (formu tek tıkla üretir)
+    sheetId: '',     // yanıt tablosu kimliği (boşsa betik en son oluşturduğunu kullanır)
+    autoSync: false, // yanıt tablosunu düzenli aralıklarla otomatik çekme
+    lastSyncCount: 0, // en son alınan yanıt satırı sayısı (yinelenmeyi önler)
     qrImage: '',   // yüklenen sabit QR görseli (data URL)
-    priorityMode: 'puan',   // 'puan' | 'fifo'
     weights: { ilkGorusme: 22, sure: 6, yogunluk: 2.5, karsilikli: 14 },
     firms: [],        // etkinliğe katılan firmaların resmi listesi
     firmAliases: {},  // firmaAnahtar → onaylanmış esas firma adı
@@ -333,6 +339,7 @@ function formuOlustur() {
   // Yanıtların toplanacağı e-tabloyu oluştur ve bağla
   var tablo = SpreadsheetApp.create(${JSON.stringify(ad + ' — Yanıtlar')});
   form.setDestination(FormApp.DestinationType.SPREADSHEET, tablo.getId());
+  PropertiesService.getScriptProperties().setProperty('SHEET_ID', tablo.getId());
 
   Logger.log('FORM ADRESİ (QR için): ' + form.getPublishedUrl());
   Logger.log('YANIT TABLOSU: ' + tablo.getUrl());
@@ -366,15 +373,34 @@ function doPost(e) {
   }
 }
 
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'veri') return veriGonder(e);
   return cikti('<h2>Hazır</h2><p>Bu adres çalışıyor. Formu uygulamadaki düğmeden oluşturun.</p>');
+}
+
+/* Yanıt tablosunu JSONP olarak döndürür (çapraz kaynak kısıtı için).
+   Önce istekte sheetId verilmişse onu, yoksa en son oluşturulan
+   formun tablosunu kullanır. */
+function veriGonder(e) {
+  var cb = e.parameter.callback || 'cb';
+  var id = e.parameter.sheetId || PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  var yuk = { headers: [], rows: [] };
+  try {
+    if (id) {
+      var sh = SpreadsheetApp.openById(id).getSheets()[0];
+      var deger = sh.getDataRange().getValues();
+      if (deger.length) { yuk.headers = deger[0].map(String); yuk.rows = deger.slice(1); }
+    }
+  } catch (hata) { yuk.error = String(hata); }
+  var govde = cb + '(' + JSON.stringify(yuk) + ');';
+  return ContentService.createTextOutput(govde).setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 function cikti(html) {
   return HtmlService.createHtmlOutput(
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<div style="font-family:system-ui;padding:24px;line-height:1.6;max-width:640px">' + html + '</div>'
-  );
+    '<div style="font-family:system-ui;padding:20px;line-height:1.6">' + html + '</div>'
+  ).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function formuKur(veri) {
@@ -401,14 +427,49 @@ function formuKur(veri) {
 
   var tablo = SpreadsheetApp.create(ad + ' — Yanıtlar');
   form.setDestination(FormApp.DestinationType.SPREADSHEET, tablo.getId());
+  PropertiesService.getScriptProperties().setProperty('SHEET_ID', tablo.getId());
 
-  return { form: form.getPublishedUrl(), tablo: tablo.getUrl() };
+  return { form: form.getPublishedUrl(), tablo: tablo.getUrl(), sheetId: tablo.getId() };
 }`;
 }
 
 /* Firma listesini web uygulamasına gönderir. Yeni sekmeye normal bir
    form gönderimi yapılır; böylece tarayıcılar arası kaynak kısıtı
    (CORS) sorun çıkarmaz ve sonuç sayfası kullanıcıya gösterilir. */
+/* Firma listesini Apps Script web uygulamasına gönderir.
+   Açılır pencere engellenirse kullanıcıya tıklanabilir bir düğme
+   sunulur; tarayıcılar doğrudan tıklamayla açılan sekmeyi engellemez. */
+/* Bazı önizleme ortamları (örn. sohbet içi dosya önizlemesi) sayfayı
+   "sandbox" bir çerçevede açar; bu durumda yeni pencere/sekme açmak
+   izin diyaloğu bile çıkmadan tamamen engellenir — kullanıcı hiçbir
+   izin veremez. Böyle bir ortamda olup olmadığımızı anlamaya çalışırız. */
+function sandboxIcindeMi() {
+  try {
+    if (window.top === window.self) return false;      // üst pencereyiz, sorun yok
+    const iframeEl = window.frameElement;
+    if (iframeEl && iframeEl.hasAttribute('sandbox')) {
+      const izinler = iframeEl.getAttribute('sandbox') || '';
+      if (!izinler.includes('allow-popups')) return true;
+    }
+  } catch (e) { return true; }   // çapraz kaynak erişimi engellendiyse muhtemelen sandbox
+  return false;
+}
+
+function formGonder(adres, hedefPencere) {
+  const f = document.createElement('form');
+  f.method = 'POST';
+  f.action = adres;
+  f.target = hedefPencere || '_blank';
+  const alan = document.createElement('input');
+  alan.type = 'hidden';
+  alan.name = 'veri';
+  alan.value = JSON.stringify({ ad: state.eventName || 'B2B Görüşme Talebi', firmalar: state.firms });
+  f.appendChild(alan);
+  document.body.appendChild(f);
+  f.submit();
+  document.body.removeChild(f);
+}
+
 function formuOtomatikOlustur() {
   if (!state.firms.length) {
     openModal({ title: 'Firma Listesi Boş', message: 'Önce katılımcı firmaları ekleyin.', alertOnly: true });
@@ -425,23 +486,28 @@ function formuOtomatikOlustur() {
     return;
   }
 
-  const f = document.createElement('form');
-  f.method = 'POST';
-  f.action = adres;
-  f.target = '_blank';
-  const alan = document.createElement('input');
-  alan.type = 'hidden';
-  alan.name = 'veri';
-  alan.value = JSON.stringify({ ad: state.eventName || 'B2B Görüşme Talebi', firmalar: state.firms });
-  f.appendChild(alan);
-  document.body.appendChild(f);
-  f.submit();
-  document.body.removeChild(f);
+  const sandbox = sandboxIcindeMi();
 
+  // Sonuç, açılır pencere yerine uygulamanın içindeki çerçevede gösterilir.
+  // Bu hem açılır pencere engelleyicisini hem de bazı önizleme
+  // ortamlarının pencere açmayı tamamen kapatmasını devre dışı bırakır.
   openModal({
-    title: 'Form Oluşturuluyor',
-    message: 'Yeni sekmede form oluşturuluyor. İşlem bitince orada form adresi görünecek — onu kopyalayıp Ayarlar bölümündeki "Google Form adresi" alanına yapıştırın.',
-    alertOnly: true
+    title: 'Form Oluşturuluyor', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      ${sandbox ? `<div class="audio-bar" style="font-size:12px">⚠ Bu sayfa şu an kısıtlı bir önizleme içinde açık görünüyor. Sonuç aşağıda görünmezse bu dosyayı indirip normal bir tarayıcı sekmesinde açın, orada sorunsuz çalışır.</div>` : ''}
+      <iframe name="b2bCerceve" id="b2bCerceve" class="sonuc-cerceve" title="Form oluşturma sonucu"></iframe>
+      <p class="hint" id="cerceveNot">İşlem sürüyor… İlk çalıştırmada Google izin isteyebilir.</p>
+      <details class="collapsible"><summary>Sonuç görünmüyorsa</summary><div class="collapsible-body">
+        <p class="hint">Bu dosyayı bilgisayarınıza indirip (tarayıcının adres çubuğunda <b>file://</b> ile) açın ya da bir web adresinde yayınlayıp oradan kullanın. "Betiği elle çalıştır" seçeneğiyle de aynı sonucu script.google.com üzerinden doğrudan alabilirsiniz.</p>
+      </div></details>`,
+    onOpen: () => {
+      formGonder(adres, 'b2bCerceve');
+      const cerceve = document.getElementById('b2bCerceve');
+      const not = document.getElementById('cerceveNot');
+      cerceve?.addEventListener('load', () => {
+        if (not) not.textContent = 'Form adresini kopyalayıp Ayarlar bölümündeki "Google Form adresi" alanına yapıştırın.';
+      });
+    }
   });
 }
 
@@ -451,6 +517,7 @@ function webAppKurulum() {
     title: 'Tek Tıkla Form Oluşturma — Kurulum', wide: true, alertOnly: true, confirmText: 'KAPAT',
     bodyHtml: `
       <p class="hint">Bu kurulumu <b>bir kez</b> yapmanız yeterli. Sonrasında her etkinlikte tek düğmeyle form oluşturursunuz.</p>
+      ${state.webAppUrl ? `<div class="audio-bar" style="font-size:12px">⚠ Daha önce kurduysanız: betik güncellendi. Aşağıdaki kodu tekrar yapıştırıp <b>Dağıt → Dağıtımları yönet → kalem simgesi → Sürüm: Yeni sürüm → Dağıt</b> yapın.</div>` : ''}
       <ol class="hint" style="padding-left:18px;line-height:1.9">
         <li><b>script.google.com</b> → <b>Yeni proje</b></li>
         <li>Editördeki her şeyi silin, aşağıdaki kodu yapıştırın, kaydedin</li>
@@ -658,8 +725,10 @@ function normalizeState(raw) {
     eventName: normalizeName(s.eventName),
     formUrl: String(s.formUrl || '').trim(),
     webAppUrl: String(s.webAppUrl || '').trim(),
+    sheetId: String(s.sheetId || '').trim(),
+    autoSync: !!s.autoSync,
+    lastSyncCount: Number.isFinite(Number(s.lastSyncCount)) ? Number(s.lastSyncCount) : 0,
     qrImage: typeof s.qrImage === 'string' && s.qrImage.startsWith('data:image') ? s.qrImage : '',
-    priorityMode: s.priorityMode === 'fifo' ? 'fifo' : 'puan',
     weights: {
       ilkGorusme: Number.isFinite(Number(s.weights?.ilkGorusme)) ? Number(s.weights.ilkGorusme) : 22,
       sure: Number.isFinite(Number(s.weights?.sure)) ? Number(s.weights.sure) : 6,
@@ -743,8 +812,6 @@ function buildSchedule() {
   const endM = parseClock(state.endTime) ?? 1080;
   const tables = state.tables;
   const agirlik = state.weights || defaultState().weights;
-  const puanli = state.priorityMode !== 'fifo';
-
   let bekleyen = mergeRequests(state.requests);
 
   // Her firmanın kaç talep attığı (yoğunluk cezası için)
@@ -764,17 +831,13 @@ function buildSchedule() {
   const scheduled = [], unscheduled = [];
 
   while (bekleyen.length) {
-    // Sıradaki işi seç: puanlı modda en yüksek puan, FIFO'da ilk talep
-    let secilen = 0;
-    if (puanli) {
-      let enIyi = -Infinity;
-      bekleyen.forEach((is, idx) => {
-        const p = talepPuani(is, atanan, talepSayisi, agirlik);
-        if (p > enIyi) { enIyi = p; secilen = idx; }
-      });
-    }
+    // Sıradaki iş, o an en yüksek önceliğe sahip talep seçilerek belirlenir.
+    let secilen = 0, enIyi = -Infinity;
+    bekleyen.forEach((is, idx) => {
+      const p = talepPuani(is, atanan, talepSayisi, agirlik);
+      if (p > enIyi) { enIyi = p; secilen = idx; }
+    });
     const is = bekleyen.splice(secilen, 1)[0];
-    is.puan = puanli ? Math.round(talepPuani(is, atanan, talepSayisi, agirlik) * 10) / 10 : null;
 
     const aB = busyOf(is.from), bB = busyOf(is.to), sure = is.duration;
 
@@ -793,7 +856,7 @@ function buildSchedule() {
       if (!uygun.length) continue;
       const masa = uygun[0];
       scheduled.push({ id: is.id, from: is.from, to: is.to, duration: sure, mutual: is.mutual,
-                       puan: is.puan, tableId: masa.id, tableTitle: masa.title, start: bas, end: bit });
+                       tableId: masa.id, tableTitle: masa.title, start: bas, end: bit });
       aB.push({ start: bas, end: bit }); bB.push({ start: bas, end: bit });
       masaBusy.get(masa.id).push({ start: bas, end: bit });
       atanan[upper(is.from)] = (atanan[upper(is.from)] || 0) + 1;
@@ -981,6 +1044,136 @@ function parseRequestTable(text) {
   return { rows, headerFound: basliklıMi };
 }
 
+/* ---------- OTOMATİK SENKRONİZASYON ----------
+   Yanıt tablosu, Apps Script'in JSONP uç noktasından düzenli
+   aralıklarla çekilir. Çapraz kaynak kısıtı nedeniyle fetch yerine
+   <script> etiketi enjeksiyonu kullanılır (klasik JSONP yöntemi). */
+let syncTimer = null;
+let syncCekimSurmekte = false;
+
+function sheetIdCoz(deger) {
+  const ham = String(deger || '').trim();
+  const m = ham.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return m ? m[1] : ham;   // zaten sade bir kimlikse olduğu gibi kullanılır
+}
+
+function senkronDurumMesaji(metin, hataMi) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.textContent = metin;
+  el.style.color = hataMi ? 'var(--red)' : 'var(--green)';
+}
+
+function senkronCek(sessiz) {
+  const adres = String(state.webAppUrl || '').trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(adres)) return;
+  if (syncCekimSurmekte) return;
+  syncCekimSurmekte = true;
+
+  const cbAdi = 'b2bSync_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const zamanAsimi = setTimeout(() => {
+    delete window[cbAdi];
+    betikEl.remove();
+    syncCekimSurmekte = false;
+    if (!sessiz) senkronDurumMesaji('Yanıt alınamadı (zaman aşımı)', true);
+  }, 12000);
+
+  window[cbAdi] = (yuk) => {
+    clearTimeout(zamanAsimi);
+    delete window[cbAdi];
+    betikEl.remove();
+    syncCekimSurmekte = false;
+
+    if (!yuk || yuk.error) {
+      if (!sessiz) senkronDurumMesaji('Tablo okunamadı: ' + (yuk?.error || 'bilinmeyen hata'), true);
+      return;
+    }
+    if (!yuk.headers?.length) {
+      senkronDurumMesaji('Henüz yanıt yok — bekleniyor…', false);
+      return;
+    }
+
+    const oncekiSayi = state.lastSyncCount || 0;
+    const yeniSatirlar = yuk.rows.slice(oncekiSayi);
+    state.lastSyncCount = yuk.rows.length;
+
+    if (!yeniSatirlar.length) {
+      senkronDurumMesaji(`Güncel — ${yuk.rows.length} yanıt (son kontrol ${new Date().toLocaleTimeString('tr-TR').slice(0,5)})`, false);
+      saveState();
+      return;
+    }
+
+    const kayitlar = parseSheetRows(yuk.headers, yeniSatirlar);
+    kayitlar.forEach(r => state.requests.push(r));
+    saveState(); render();
+    senkronDurumMesaji(`${kayitlar.length} yeni talep alındı (toplam ${yuk.rows.length} yanıt)`, false);
+  };
+
+  const parcalar = [adres + '?action=veri&callback=' + cbAdi];
+  const sid = sheetIdCoz(state.sheetId);
+  if (sid) parcalar.push('sheetId=' + encodeURIComponent(sid));
+  const betikEl = document.createElement('script');
+  betikEl.src = parcalar[0] + '&' + parcalar.slice(1).join('&');
+  betikEl.onerror = () => {
+    clearTimeout(zamanAsimi);
+    delete window[cbAdi];
+    betikEl.remove();
+    syncCekimSurmekte = false;
+    if (!sessiz) senkronDurumMesaji('Bağlantı kurulamadı', true);
+  };
+  document.body.appendChild(betikEl);
+}
+
+/* Tablo satırlarını (başlık + veri dizileri) taleplere çevirir.
+   parseRequestTable ile aynı sütun tanıma mantığını kullanır. */
+function parseSheetRows(headers, rows) {
+  const normBaslik = headers.map(h => String(h || '').toLocaleLowerCase('tr'));
+  const bul = (...anahtarlar) => normBaslik.findIndex(h => anahtarlar.some(a => h.includes(a)));
+  const iFrom = bul('talep eden', 'firma adı', 'firmanız', 'kendi firma', 'talepte bulunan');
+  const iTo = bul('görüşmek', 'görüşülecek', 'talep edilen', 'hedef firma', 'karşı firma');
+  const iDur = bul('süre', 'dakika');
+  const iTime = bul('zaman damgası', 'timestamp', 'tarih');
+  if (iFrom < 0 || iTo < 0) return [];
+
+  const sonuc = [];
+  rows.forEach((r) => {
+    const from = normalizeName(r[iFrom]);
+    const hedefler = parseMultiFirms(r[iTo]);
+    if (!from || !hedefler.length) return;
+    const sureHam = iDur >= 0 ? String(r[iDur] || '').match(/\d+/) : null;
+    const sure = sureHam ? Math.max(1, Number(sureHam[0])) : state.defaultDuration;
+    hedefler.forEach(to => sonuc.push({
+      id: makeId('r'), from, to, duration: sure,
+      createdAt: iTime >= 0 ? String(r[iTime] || '') : '',
+      order: state.requests.length + sonuc.length
+    }));
+  });
+  return sonuc;
+}
+
+function senkronBaslat() {
+  if (syncTimer) return;
+  senkronCek(true);
+  syncTimer = setInterval(() => senkronCek(true), 20000);
+}
+function senkronDurdur() {
+  if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+}
+
+function toggleAutoSync(acik) {
+  state.autoSync = !!acik;
+  saveState();
+  if (state.autoSync) { senkronBaslat(); senkronCek(false); }
+  else senkronDurdur();
+  render();
+}
+
+function applySheetId() {
+  const v = document.getElementById('setSheetId')?.value;
+  state.sheetId = sheetIdCoz(v);
+  saveState();
+}
+
 function importRequests() {
   const kutu = document.getElementById('importBox');
   const { rows, headerFound } = parseRequestTable(kutu?.value || '');
@@ -1051,21 +1244,6 @@ function applySettings() {
   saveState(); render();
 }
 
-function applyWeights() {
-  const g = id => document.getElementById(id)?.value;
-  state.priorityMode = g('setMode') === 'fifo' ? 'fifo' : 'puan';
-  const say = (v, y) => Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : y;
-  state.weights = {
-    ilkGorusme: say(g('wIlk'), 22),
-    sure: say(g('wSure'), 6),
-    yogunluk: say(g('wYog'), 2.5),
-    karsilikli: say(g('wKar'), 14)
-  };
-  saveState();
-  if (state.schedule.length) buildSchedule();   // program varsa yeniden hesapla
-  render();
-}
-
 function generateSchedule() {
   if (!state.requests.length) { openModal({ title: 'Talep Yok', message: 'Önce görüşme taleplerini içe aktarın veya elle ekleyin.', alertOnly: true }); return; }
   buildSchedule();
@@ -1130,11 +1308,10 @@ function scheduleTableHtml() {
       <td>${esc(s.tableTitle)}</td>
       <td class="pair">${esc(s.from)} ↔ ${esc(s.to)}${s.mutual ? '<span class="badge">karşılıklı</span>' : ''}</td>
       <td>${s.duration} dk</td>
-      ${state.priorityMode === 'fifo' ? '' : `<td class="hint" style="font-size:11px">${s.puan ?? ''}</td>`}
     </tr>`;
   }).join('');
   return `<div class="sched"><table>
-    <thead><tr><th>Saat</th><th>Masa</th><th>Firmalar</th><th>Süre</th>${state.priorityMode === 'fifo' ? '' : '<th>Puan</th>'}</tr></thead>
+    <thead><tr><th>Saat</th><th>Masa</th><th>Firmalar</th><th>Süre</th></tr></thead>
     <tbody>${satirlar}</tbody></table></div>`;
 }
 
@@ -1257,8 +1434,24 @@ function renderControl() {
           <section class="panel">
             <div class="panel-header"><h2>Talepler</h2><span>${state.requests.length}</span></div>
             <div class="panel-body">
-              <details class="collapsible" ${state.requests.length ? '' : 'open'}>
-                <summary>Google Forms tablosundan aktar</summary>
+              ${state.webAppUrl ? `
+                <div class="sync-box ${state.autoSync ? 'on' : ''}">
+                  <label class="sync-toggle">
+                    <input type="checkbox" ${state.autoSync ? 'checked' : ''} onchange="toggleAutoSync(this.checked)">
+                    <span>Otomatik senkronizasyon — talep girildiğinde otomatik alınsın</span>
+                  </label>
+                  ${state.autoSync ? `
+                    <p class="hint" id="syncStatus">Bekleniyor…</p>
+                    <details class="collapsible"><summary>Yanıt tablosu belirt (isteğe bağlı)</summary><div class="collapsible-body">
+                      <p class="hint">Boş bırakılırsa en son oluşturulan form kullanılır. Birden fazla form oluşturduysanız hangisinin yanıtları izlensin, tablonun adresini buraya yapıştırın.</p>
+                      <input id="setSheetId" type="text" value="${esc(state.sheetId)}" placeholder="Yanıt tablosu adresi veya kimliği" onchange="applySheetId()">
+                    </div></details>
+                  ` : ''}
+                </div>
+              ` : `<p class="hint">Otomatik senkronizasyon için önce "⚙ Tek tık kurulumu"nu tamamlayın.</p>`}
+
+              <details class="collapsible" ${state.requests.length || state.autoSync ? '' : 'open'}>
+                <summary>Google Forms tablosundan elle aktar</summary>
                 <div class="collapsible-body">
                   <p class="hint">Form yanıtları tablosunu Google Sheets'te seçip kopyalayın, buraya yapıştırın. Başlık satırını da dahil edin.</p>
                   <textarea id="importBox" placeholder="Zaman damgası&#9;Talep eden firma&#9;Görüşülecek firma&#9;Süre&#10;10.06.2026 09:12&#9;ONS MAKİNA&#9;TUSAŞ&#9;20"></textarea>
@@ -1300,20 +1493,6 @@ function renderControl() {
               <div><label for="setForm">Google Form adresi</label><input id="setForm" type="url" value="${esc(state.formUrl)}" placeholder="https://forms.gle/..."></div>
               <div><label for="setWebApp">Form oluşturucu adresi (tek tık)</label><input id="setWebApp" type="url" value="${esc(state.webAppUrl)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
               <button type="button" class="secondary" onclick="applySettings()">AYARLARI KAYDET</button>
-
-              <div class="section-label">Öncelik Kuralı</div>
-              <select id="setMode" onchange="applyWeights()">
-                <option value="puan" ${state.priorityMode !== 'fifo' ? 'selected' : ''}>Adil dağıtım (puanlı)</option>
-                <option value="fifo" ${state.priorityMode === 'fifo' ? 'selected' : ''}>Sadece talep sırası</option>
-              </select>
-              ${state.priorityMode === 'fifo' ? '' : `
-                <p class="hint">Puan yükseldikçe görüşme daha erken saate yerleşir. Değerleri artırmak o etkenin ağırlığını artırır.</p>
-                <div class="grid2">
-                  <div><label for="wIlk">Henüz görüşmemiş olana öncelik</label><input id="wIlk" type="number" min="0" step="1" value="${state.weights.ilkGorusme}" onchange="applyWeights()"></div>
-                  <div><label for="wKar">Karşılıklı talep bonusu</label><input id="wKar" type="number" min="0" step="1" value="${state.weights.karsilikli}" onchange="applyWeights()"></div>
-                  <div><label for="wSure">Uzun süre cezası</label><input id="wSure" type="number" min="0" step="1" value="${state.weights.sure}" onchange="applyWeights()"></div>
-                  <div><label for="wYog">Çok talep cezası</label><input id="wYog" type="number" min="0" step="0.5" value="${state.weights.yogunluk}" onchange="applyWeights()"></div>
-                </div>`}
 
               <div class="section-label">QR Görseli</div>
               ${state.qrImage
@@ -1465,6 +1644,8 @@ function applyRoute() {
   route = h === '#takip' ? 'takip' : (h === '#qr' ? 'qr' : 'kontrol');
   if (route !== 'takip') stopPolling();
   state = loadState();
+  if (route === 'kontrol' && state.autoSync) senkronBaslat();
+  else senkronDurdur();
   render();
 }
 
@@ -1618,7 +1799,7 @@ handleEmbedded();
 state = loadState();
 applyRoute();
 window.addEventListener('hashchange', applyRoute);
-window.addEventListener('beforeunload', () => { if (tickTimer) clearInterval(tickTimer); stopPolling(); });
+window.addEventListener('beforeunload', () => { if (tickTimer) clearInterval(tickTimer); stopPolling(); senkronDurdur(); });
 </script>
 </body>
 </html>

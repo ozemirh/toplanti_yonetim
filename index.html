@@ -807,31 +807,19 @@ function talepPuani(is, atanan, talepSayisi, agirlik) {
 }
 
 /* İki firmanın ve bir masanın aynı anda boş olduğu en erken anı bulur. */
-function buildSchedule() {
-  const startM = parseClock(state.startTime) ?? 540;
-  const endM = parseClock(state.endTime) ?? 1080;
-  const tables = state.tables;
-  const agirlik = state.weights || defaultState().weights;
-  let bekleyen = mergeRequests(state.requests);
-
-  // Her firmanın kaç talep attığı (yoğunluk cezası için)
-  const talepSayisi = {};
-  bekleyen.forEach(is => { const k = upper(is.from); talepSayisi[k] = (talepSayisi[k] || 0) + 1; });
-
-  const firmaBusy = new Map();
-  const masaBusy = new Map();
-  const atanan = {};
-  tables.forEach(t => masaBusy.set(t.id, []));
+/* Öncelik puanına göre bekleyen işleri verilen dolu takvimlere
+   yerleştirir. hem tam program oluşturma (sıfırdan) hem de otomatik
+   senkronizasyonun mevcut programı bozmadan ekleme yapması bu ortak
+   fonksiyon üzerinden çalışır. */
+function isleriYerlestir(bekleyen, tables, firmaBusy, masaBusy, atanan, talepSayisi, agirlik, startM, endM) {
+  const scheduled = [], unscheduled = [];
   const busyOf = (ad) => {
     const k = upper(ad);
     if (!firmaBusy.has(k)) firmaBusy.set(k, []);
     return firmaBusy.get(k);
   };
 
-  const scheduled = [], unscheduled = [];
-
   while (bekleyen.length) {
-    // Sıradaki iş, o an en yüksek önceliğe sahip talep seçilerek belirlenir.
     let secilen = 0, enIyi = -Infinity;
     bekleyen.forEach((is, idx) => {
       const p = talepPuani(is, atanan, talepSayisi, agirlik);
@@ -865,6 +853,27 @@ function buildSchedule() {
     }
     if (!ok) unscheduled.push({ ...is, reason: 'Etkinlik saatleri içinde uygun boşluk yok' });
   }
+  return { scheduled, unscheduled };
+}
+
+/* Sıfırdan tam program oluşturur — masa/sayaç durumlarını da
+   sıfırlar. "PROGRAMI OLUŞTUR" düğmesiyle elle tetiklenir. */
+function buildSchedule() {
+  const startM = parseClock(state.startTime) ?? 540;
+  const endM = parseClock(state.endTime) ?? 1080;
+  const tables = state.tables;
+  const agirlik = state.weights || defaultState().weights;
+  const bekleyen = mergeRequests(state.requests);
+
+  const talepSayisi = {};
+  bekleyen.forEach(is => { const k = upper(is.from); talepSayisi[k] = (talepSayisi[k] || 0) + 1; });
+
+  const firmaBusy = new Map();
+  const masaBusy = new Map();
+  const atanan = {};
+  tables.forEach(t => masaBusy.set(t.id, []));
+
+  const { scheduled, unscheduled } = isleriYerlestir(bekleyen, tables, firmaBusy, masaBusy, atanan, talepSayisi, agirlik, startM, endM);
 
   scheduled.sort((a, b) => a.start - b.start || String(a.tableTitle).localeCompare(String(b.tableTitle), 'tr'));
   state.schedule = scheduled;
@@ -872,6 +881,62 @@ function buildSchedule() {
   state.live = {};
   state.tables.forEach(t => { state.live[t.id] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false }; });
   saveState();
+}
+
+/* Otomatik senkronizasyondan yeni talep geldiğinde çağrılır.
+   Zaten programlanmış görüşmelere ve çalışan sayaçlara DOKUNMAZ;
+   yalnızca henüz yerleştirilmemiş talepleri mevcut takvimlerin
+   üzerine, boş kalan zamanlara ekler. */
+function otomatikProgramGuncelle() {
+  if (!state.requests.length) return false;
+  const startM = parseClock(state.startTime) ?? 540;
+  const endM = parseClock(state.endTime) ?? 1080;
+  const tables = state.tables;
+  const agirlik = state.weights || defaultState().weights;
+
+  const tumIsler = mergeRequests(state.requests);
+  const talepSayisi = {};
+  tumIsler.forEach(is => { const k = upper(is.from); talepSayisi[k] = (talepSayisi[k] || 0) + 1; });
+
+  // Zaten programlanmış çiftleri (firma A ↔ firma B) hariç tut.
+  const mevcutCiftler = new Set(state.schedule.map(s => pairKey(s.from, s.to)));
+  const yeniIsler = tumIsler.filter(is => !mevcutCiftler.has(pairKey(is.from, is.to)));
+  if (!yeniIsler.length) return false;
+
+  // Takvimleri MEVCUT programdan kur — sıfırdan değil. Böylece
+  // çalışan/geçmiş görüşmeler aynen korunur.
+  const firmaBusy = new Map();
+  const masaBusy = new Map();
+  const atanan = {};
+  tables.forEach(t => masaBusy.set(t.id, []));
+  state.schedule.forEach(s => {
+    const iv = { start: s.start, end: s.end };
+    if (masaBusy.has(s.tableId)) masaBusy.get(s.tableId).push(iv);
+    const af = upper(s.from), at = upper(s.to);
+    if (!firmaBusy.has(af)) firmaBusy.set(af, []);
+    if (!firmaBusy.has(at)) firmaBusy.set(at, []);
+    firmaBusy.get(af).push(iv);
+    firmaBusy.get(at).push(iv);
+    atanan[af] = (atanan[af] || 0) + 1;
+    atanan[at] = (atanan[at] || 0) + 1;
+  });
+
+  const { scheduled: yeniScheduled, unscheduled: yeniUnscheduled } =
+    isleriYerlestir(yeniIsler, tables, firmaBusy, masaBusy, atanan, talepSayisi, agirlik, startM, endM);
+
+  if (yeniScheduled.length) {
+    state.schedule = [...state.schedule, ...yeniScheduled]
+      .sort((a, b) => a.start - b.start || String(a.tableTitle).localeCompare(String(b.tableTitle), 'tr'));
+  }
+  state.unscheduled = yeniUnscheduled;
+
+  // Yeni eklenen masalar için sayaç kaydı aç; mevcutlara dokunma.
+  state.tables.forEach(t => {
+    if (!state.live[t.id]) state.live[t.id] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false };
+  });
+
+  saveState();
+  return yeniScheduled.length > 0;
 }
 
 function tableMeetings(tableId) { return state.schedule.filter(s => s.tableId === tableId); }
@@ -1105,8 +1170,10 @@ function senkronCek(sessiz) {
 
     const kayitlar = parseSheetRows(yuk.headers, yeniSatirlar);
     kayitlar.forEach(r => state.requests.push(r));
+    const yeniYerlesti = otomatikProgramGuncelle();
     saveState(); render();
-    senkronDurumMesaji(`${kayitlar.length} yeni talep alındı (toplam ${yuk.rows.length} yanıt)`, false);
+    const ekBilgi = yeniYerlesti ? ' — masalara otomatik dağıtıldı' : '';
+    senkronDurumMesaji(`${kayitlar.length} yeni talep alındı${ekBilgi} (toplam ${yuk.rows.length} yanıt)`, false);
   };
 
   const parcalar = [adres + '?action=veri&callback=' + cbAdi];
@@ -1248,10 +1315,9 @@ function generateSchedule() {
   if (!state.requests.length) { openModal({ title: 'Talep Yok', message: 'Önce görüşme taleplerini içe aktarın veya elle ekleyin.', alertOnly: true }); return; }
   buildSchedule();
   render();
-  const u = state.unscheduled.length;
   openModal({
     title: 'Program Oluşturuldu',
-    message: `${state.schedule.length} görüşme masalara dağıtıldı.` + (u ? ` ${u} görüşme etkinlik saatlerine sığmadı — süreyi uzatabilir veya masa ekleyebilirsiniz.` : ''),
+    message: `${state.schedule.length} görüşme masalara dağıtıldı.`,
     alertOnly: true
   });
 }
@@ -1332,7 +1398,6 @@ function renderControl() {
   document.body.style.overflow = '';
   const firmalar = new Set();
   state.requests.forEach(r => { firmalar.add(upper(r.from)); firmalar.add(upper(r.to)); });
-  const sigmayan = state.unscheduled.length;
   const bilinmeyen = state.firms.length ? taninmayanAdlar() : [];
 
   document.getElementById('app').innerHTML = `
@@ -1354,7 +1419,6 @@ function renderControl() {
         <div class="stat"><div class="k">Talep</div><div class="v">${state.requests.length}</div></div>
         <div class="stat"><div class="k">Görüşme</div><div class="v">${state.schedule.length}</div></div>
         <div class="stat"><div class="k">Masa</div><div class="v">${state.tables.length}</div></div>
-        <div class="stat ${sigmayan ? 'warn' : ''}"><div class="k">Sığmayan</div><div class="v">${sigmayan}</div></div>
       </div>
 
       <div class="main-layout">
@@ -1373,10 +1437,6 @@ function renderControl() {
             <div class="panel-header"><h2>Görüşme Programı</h2><span>${state.schedule.length} görüşme</span></div>
             <div class="panel-body">
               ${scheduleTableHtml()}
-              ${sigmayan ? `<details class="collapsible"><summary>${sigmayan} görüşme yerleştirilemedi</summary><div class="collapsible-body">
-                <p class="hint">Bu görüşmeler etkinlik saatlerine sığmadı. Bitiş saatini uzatın veya masa ekleyin.</p>
-                ${state.unscheduled.map(u => `<div class="hint">• ${esc(u.from)} ↔ ${esc(u.to)} (${u.duration} dk)</div>`).join('')}
-              </div></details>` : ''}
             </div>
           </section>
         </div>

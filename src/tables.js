@@ -33,11 +33,6 @@ export function removeTable(id) {
     }
   });
 }
-export function renameTable(id, value) {
-  const t = state.tables.find(x => x.id === id);
-  if (t) { t.title = normalizeName(value) || t.title; saveState(); }
-}
-
 /* Salon planındaki tüm masaları ızgaraya göre yeniden dizer.
    Elle sürüklenerek bozulan düzeni toplu olarak düzeltmek için. */
 export function resetLayout() {
@@ -59,7 +54,11 @@ export function applySettings() {
   state.webAppUrl = String(g('setWebApp') || '').trim();
   if (/^\d{2}:\d{2}$/.test(String(g('setStart')))) state.startTime = g('setStart');
   if (/^\d{2}:\d{2}$/.test(String(g('setEnd')))) state.endTime = g('setEnd');
-  state.defaultDuration = Math.max(1, Number(g('setDur')) || 15);
+  // Varsayılan süre alanı Ayarlar'dan kaldırıldı; değer yine de
+  // talep süresi belirtilmediğinde yedek olarak kullanılıyor, bu
+  // yüzden alan yoksa mevcut değere dokunulmaz.
+  const durEl = document.getElementById('setDur');
+  if (durEl) state.defaultDuration = Math.max(1, Number(durEl.value) || 15);
   saveState(); render();
 }
 

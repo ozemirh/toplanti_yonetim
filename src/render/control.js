@@ -44,7 +44,6 @@ export function renderControl() {
               <h2>Masalar</h2>
               <div class="row" style="gap:6px">
                 ${layoutView ? `
-                  <button type="button" class="secondary small" onclick="addTable()">+ MASA</button>
                   <button type="button" class="secondary small" onclick="resetLayout()">↺ SIFIRLA</button>
                   <button type="button" class="${editMode ? 'green' : 'secondary'} small" onclick="toggleEditMode()">${editMode ? '✔ BİTTİ' : '✎ DÜZENLE'}</button>
                 ` : ''}
@@ -54,15 +53,17 @@ export function renderControl() {
             </div>
             ${layoutView && editMode ? `
               <div class="row" style="padding:8px 12px;border-bottom:1px solid var(--border-soft);background:var(--card-alt)">
-                <span class="hint" style="font-size:11px;font-weight:600">Şekil ekle:</span>
+                <button type="button" class="secondary small" onclick="addTable()">+ MASA EKLE</button>
+                <span class="hint" style="font-size:11px;font-weight:600;margin-left:6px">Şekil ekle:</span>
                 <button type="button" class="secondary small" onclick="addShape('rect')">▭ Dikdörtgen</button>
                 <button type="button" class="secondary small" onclick="addShape('circle')">◯ Daire</button>
                 <button type="button" class="secondary small" onclick="addShape('note')">✎ Not</button>
                 <span style="flex:1"></span>
+                <button type="button" class="secondary small" onclick="renameSelectedHallItem()" ${hallSelection ? '' : 'disabled'}>✎ ADINI DEĞİŞTİR</button>
                 <button type="button" class="red small" onclick="deleteSelectedHallItem()" ${hallSelection ? '' : 'disabled'}>🗑 SEÇİLENİ SİL</button>
               </div>
               <div class="hint" style="padding:0 12px 8px;font-size:11px">
-                ${hallSelection ? `Seçili: ${hallSelection.type === 'table' ? (state.tables.find(x => x.id === hallSelection.id)?.title || '') : (state.shapes.find(x => x.id === hallSelection.id)?.label || '')}` : 'Silmek için bir masaya veya şekle tıklayın.'}
+                ${hallSelection ? `Seçili: ${hallSelection.type === 'table' ? (state.tables.find(x => x.id === hallSelection.id)?.title || '') : (state.shapes.find(x => x.id === hallSelection.id)?.label || '')}` : 'Adını değiştirmek veya silmek için bir masaya ya da şekle tıklayın.'}
               </div>
             ` : ''}
             <div class="panel-body">
@@ -118,7 +119,6 @@ export function renderControl() {
                 <button type="button" class="${state.webAppUrl ? 'secondary' : 'yellow'} small" onclick="webAppKurulum()">
                   ${state.webAppUrl ? '⚙ Form oluşturucu ayarı' : '⚙ TEK TIK KURULUMU'}
                 </button>
-                <button type="button" class="secondary small" onclick="formBetigiGoster()">Betiği elle çalıştır</button>
                 ${state.webAppUrl ? '<span class="hint" style="font-size:11px;color:var(--green);font-weight:600">✓ kurulu</span>' : ''}
               </div>
             </div>
@@ -163,15 +163,6 @@ export function renderControl() {
                 </div>
               ` : `<p class="hint">Otomatik senkronizasyon için önce "⚙ Tek tık kurulumu"nu tamamlayın.</p>`}
 
-              <details class="collapsible" ${state.requests.length || state.autoSync ? '' : 'open'}>
-                <summary>Google Forms tablosundan elle aktar</summary>
-                <div class="collapsible-body">
-                  <p class="hint">Form yanıtları tablosunu Google Sheets'te seçip kopyalayın, buraya yapıştırın. Başlık satırını da dahil edin.</p>
-                  <textarea id="importBox" placeholder="Zaman damgası&#9;Talep eden firma&#9;Görüşülecek firma&#9;Süre&#10;10.06.2026 09:12&#9;ONS MAKİNA&#9;TUSAŞ&#9;20"></textarea>
-                  <div class="row"><button type="button" onclick="importRequests()">TABLOYU AKTAR</button></div>
-                </div>
-              </details>
-
               <details class="collapsible">
                 <summary>Elle talep ekle</summary>
                 <div class="collapsible-body">
@@ -202,7 +193,6 @@ export function renderControl() {
                 <div><label for="setStart">Başlangıç</label><input id="setStart" type="time" value="${esc(state.startTime)}"></div>
                 <div><label for="setEnd">Bitiş</label><input id="setEnd" type="time" value="${esc(state.endTime)}"></div>
               </div>
-              <div><label for="setDur">Varsayılan görüşme süresi (dk)</label><input id="setDur" type="number" min="1" value="${state.defaultDuration}"></div>
               <div><label for="setForm">Google Form adresi</label><input id="setForm" type="url" value="${esc(state.formUrl)}" placeholder="https://forms.gle/..."></div>
               <div><label for="setWebApp">Form oluşturucu adresi (tek tık)</label><input id="setWebApp" type="url" value="${esc(state.webAppUrl)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
               <button type="button" class="secondary" onclick="applySettings()">AYARLARI KAYDET</button>
@@ -215,13 +205,6 @@ export function renderControl() {
                    </div></div>`
                 : `<p class="hint">QR kodunuzu bir kez üretip (örn. qr-code-generator.com) görselini buraya yükleyin. Böylece internet olmadan da görüntülenir.</p>
                    <button type="button" class="secondary" onclick="qrGorseliYukle()">⬆ QR GÖRSELİ YÜKLE</button>`}
-
-              <div class="section-label">Masalar</div>
-              ${state.tables.map(t => `<div class="row">
-                <input type="text" value="${esc(t.title)}" style="flex:1" onchange="renameTable('${t.id}', this.value)">
-                <button type="button" class="small red" onclick="removeTable('${t.id}')">×</button>
-              </div>`).join('')}
-              <button type="button" class="secondary" onclick="addTable()">+ MASA EKLE</button>
             </div>
           </section>
         </div>

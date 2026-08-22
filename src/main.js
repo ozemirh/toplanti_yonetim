@@ -17,22 +17,22 @@ import { applyRoute, render, openFollow, closeFollow, openQr, closeQr } from './
 import { stopPolling } from './render/polling.js';
 import { handleEmbedded, openShare } from './render/share.js';
 import { qrHata, qrGorseliYukle, qrGorseliSil } from './render/qr.js';
-import { deleteSelectedHallItem, addShape, toggleLayoutView, toggleEditMode } from './render/hall.js';
+import { deleteSelectedHallItem, renameSelectedHallItem, addShape, toggleLayoutView, toggleEditMode } from './render/hall.js';
 import { masaProgramiGoster } from './render/scheduleTable.js';
 
 import { sesiAc, baslat, durdur, sifirla, sonraki, stopTicking } from './timers.js';
 import {
-  addTable, removeTable, renameTable, resetLayout, applySettings, generateSchedule
+  addTable, removeTable, resetLayout, applySettings, generateSchedule
 } from './tables.js';
 import {
   firmaEkleToplu, firmaSil, firmaListesiniTemizle, firmaListesiniKopyala,
   adiEsle, adiFirmaYap, kopyala
 } from './firmMatching.js';
 import {
-  formuOtomatikOlustur, webAppKurulum, formBetigiGoster, applySheetId
+  formuOtomatikOlustur, webAppKurulum, applySheetId
 } from './googleForms.js';
 import {
-  importRequests, addManualRequest, removeRequest, clearRequests
+  addManualRequest, removeRequest, clearRequests
 } from './importRequests.js';
 import { toggleAutoSync, senkronDurdur } from './sync.js';
 
@@ -47,16 +47,16 @@ Object.assign(window, {
   // masa programı (takip ekranındaki "Sıradaki" düğmesi)
   masaProgramiGoster,
   // salon planı
-  toggleLayoutView, toggleEditMode, addShape, deleteSelectedHallItem,
+  toggleLayoutView, toggleEditMode, addShape, deleteSelectedHallItem, renameSelectedHallItem,
   // masalar / ayarlar
-  addTable, removeTable, renameTable, resetLayout, applySettings, generateSchedule,
+  addTable, removeTable, resetLayout, applySettings, generateSchedule,
   // firmalar
   firmaEkleToplu, firmaSil, firmaListesiniTemizle, firmaListesiniKopyala,
   adiEsle, adiFirmaYap, kopyala,
   // google forms entegrasyonu
-  formuOtomatikOlustur, webAppKurulum, formBetigiGoster, applySheetId,
+  formuOtomatikOlustur, webAppKurulum, applySheetId,
   // talepler
-  importRequests, addManualRequest, removeRequest, clearRequests,
+  addManualRequest, removeRequest, clearRequests,
   // senkronizasyon
   toggleAutoSync,
   // qr ekranı

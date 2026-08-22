@@ -77,11 +77,19 @@ export function sifirla(tableId) {
 }
 export function sonraki(tableId) {
   const L = liveOf(tableId), list = tableMeetings(tableId);
-  if (L.index >= list.length - 1) { L.index = list.length; L.running = false; L.secondsLeft = 0; saveState(); render(); return; }
+  const masa = state.tables.find(t => t.id === tableId);
+  const masaAdi = masa?.title || 'Masa';
+  if (L.index >= list.length - 1) {
+    L.index = list.length; L.running = false; L.secondsLeft = 0;
+    konus(`${masaAdi} masasındaki tüm görüşmeler tamamlanmıştır.`);
+    saveState(); render(); return;
+  }
   L.index += 1;
   const m = currentMeeting(tableId);
   L.secondsLeft = m ? m.duration * 60 : 0;
   L.warned = false; L.ended = false; L.running = false;
+  // Sıradaki görüşmeye geçildiğinde firmalar masaya çağrılır.
+  if (m) konus(`${masaAdi}. Sırada ${m.from} ve ${m.to} firmaları var. Lütfen ${masaAdi} masasına geçiniz.`);
   saveState(); render();
 }
 

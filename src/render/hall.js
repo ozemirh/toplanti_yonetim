@@ -173,6 +173,37 @@ export function bindHallDragging() {
   });
 }
 
+/* Seçili masanın başlığını ya da şeklin etiketini değiştirir.
+   Masa adı düzenleme yalnızca burada yapılır (Ayarlar panelindeki
+   masa listesi kaldırıldı). */
+export function renameSelectedHallItem() {
+  if (!hallSelection) return;
+  const masaMi = hallSelection.type === 'table';
+  const oge = masaMi
+    ? state.tables.find(x => x.id === hallSelection.id)
+    : state.shapes.find(x => x.id === hallSelection.id);
+  if (!oge) return;
+  const mevcut = masaMi ? oge.title : oge.label;
+  openModal({
+    title: masaMi ? 'Masa Adını Değiştir' : 'Şekil Etiketini Değiştir',
+    message: 'Yeni adı girin:',
+    showInput: true, inputValue: mevcut, confirmText: 'KAYDET',
+    onConfirm: (deger) => {
+      const yeni = normalizeName(deger);
+      if (!yeni) return;
+      if (masaMi) {
+        oge.title = yeni;
+        // Programdaki masa başlığı kopyaları da güncellenmeli ki
+        // takvim ve anonslar yeni adı kullansın.
+        state.schedule.forEach(s => { if (s.tableId === oge.id) s.tableTitle = yeni; });
+      } else {
+        oge.label = yeni;
+      }
+      saveState(); render();
+    }
+  });
+}
+
 export function deleteSelectedHallItem() {
   if (!hallSelection) return;
   if (hallSelection.type === 'table') {

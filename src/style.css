@@ -148,12 +148,13 @@ label{display:block;margin-bottom:5px;color:var(--gray-dim);font-family:var(--fo
    140px altına inerse) sayfa güvenlik ağı olarak kaydırılabilir. */
 .follow-screen .tables-grid{flex:1;grid-auto-rows:minmax(140px,1fr);grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .follow-screen .table-card{container-type:size;min-height:0}
-.follow-screen .tc-head{padding:clamp(7px,3cqb,16px) clamp(11px,4cqb,20px);font-size:clamp(12.5px,4.5cqb,20px)}
-.follow-screen .tc-body{flex:1;justify-content:space-evenly;gap:clamp(5px,2cqb,16px);min-height:0;overflow:hidden;padding:clamp(10px,3cqb,22px)}
-.follow-screen .tc-label{font-size:clamp(9.5px,3cqb,15px)}
-.follow-screen .tc-time{font-size:clamp(34px,17cqb,96px)}
-.follow-screen .tc-pair{font-size:clamp(16px,7.5cqb,38px);gap:clamp(2px,1cqb,8px)}
-.follow-screen .tc-next{font-size:clamp(11px,3.4cqb,17px);padding-top:clamp(6px,2cqb,14px)}
+.follow-screen .tc-head{padding:clamp(7px,3cqb,22px) clamp(11px,4cqb,28px);font-size:clamp(14px,4.5cqb,30px)}
+.follow-screen .tc-body{flex:1;justify-content:space-evenly;gap:clamp(6px,2cqb,22px);min-height:0;overflow:hidden;padding:clamp(10px,3cqb,30px)}
+.follow-screen .tc-label{font-size:clamp(13px,3.6cqb,26px)}
+.follow-screen .tc-time{font-size:clamp(40px,17cqb,150px)}
+.follow-screen .tc-pair{font-size:clamp(20px,8cqb,60px);gap:clamp(3px,1cqb,12px)}
+.follow-screen .tc-next{font-size:clamp(14px,4cqb,28px);padding-top:clamp(6px,2cqb,20px)}
+.follow-screen .tc-next-firms{max-width:65%}
 .follow-progress{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
 
 /* ---------- QR ekranı ---------- */

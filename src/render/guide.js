@@ -82,11 +82,14 @@ const ADIMLAR = [
         <li>Masaları sürükleyerek gerçek salon düzeninize göre dizersiniz</li>
         <li>Bir masaya/şekle tıklayıp <b>✎ ADINI DEĞİŞTİR</b> veya
             <b>🗑 SEÇİLENİ SİL</b> yaparsınız</li>
-        <li><b>▭ Dikdörtgen · ◯ Daire · ✎ Not</b> ile sahne, giriş, ikram
-            alanı gibi referans şekilleri eklersiniz</li>
+        <li><b>+ Şekil ekle…</b> menüsünden sahne, giriş, çıkış, duvar,
+            kayıt, ikram, bekleme alanı, WC, yön oku gibi kroki
+            öğelerini eklersiniz</li>
       </ul>
-      <p class="guide-note">Şekiller yalnızca görseldir, eşleştirmeyi
-      etkilemez. Masa ekleme ve adlandırma sadece bu ekrandan yapılır.</p>`
+      <p class="guide-note">Bu kroki aynı zamanda <b>takip ekranında</b>
+      gösterilir — yani buradaki yerleşim, firmaların salonda masalarını
+      bulmak için bakacağı plandır. Şekiller eşleştirmeyi etkilemez;
+      masa ekleme ve adlandırma sadece bu ekrandan yapılır.</p>`
   },
   {
     no: '7',
@@ -123,13 +126,17 @@ const ADIMLAR = [
     baslik: 'Takip ekranını yansıtın',
     yer: 'Üst menü → TAKİP EKRANI',
     icerik: `
-      <p><b>TAKİP EKRANI</b> salona yansıtılacak sade bir görünüm açar: tüm
-      masaların o anki görüşmesi ve kalan süresi büyük puntoyla görünür.</p>
+      <p><b>TAKİP EKRANI</b> salona yansıtılacak görünümü açar. Varsayılan
+      olarak <b>salon krokisi</b> gelir: masalar 6. adımda dizdiğiniz
+      fiziksel konumlarında, sahne/giriş/ikram gibi öğelerle birlikte
+      çizilir. Böylece firmalar hem sıralarını hem de masalarının salonun
+      neresinde olduğunu tek bakışta görür.</p>
       <p>Kontrol panelinde yaptığınız her değişiklik (başlatma, sıradakine
       geçme) bu ekrana otomatik yansır.</p>
-      <p>Kartların altındaki <b>Sıradaki … ▸ tümü</b> satırına tıklanınca o
-      masanın tüm görüşme sırası saatleriyle birlikte açılır — firmalar
-      sıralarının ne zaman geldiğini görebilir.</p>
+      <p>Kartların altındaki <b>Sıradaki …</b> satırına tıklanınca o masanın
+      tüm görüşme sırası saatleriyle birlikte açılır.</p>
+      <p><b>≡ LİSTE</b> düğmesiyle, sayaçların daha büyük göründüğü sade
+      ızgara görünümüne geçebilirsiniz.</p>
       <p class="guide-note">Tarayıcı yeni sekmeyi engellerse "bu sekmede aç"
       seçeneği sunulur; kalıcı çözüm için adres çubuğundaki engelleme
       simgesinden bu siteye izin verin.</p>`

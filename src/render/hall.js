@@ -1,17 +1,21 @@
 /* ============================================================
-   SALON PLANI — sürükle-bırak yerleşim
+   SALON PLANI (KROKİ) — sürükle-bırak yerleşim
+
    Masalar, canlı durumlarını (sayaç, firma adları) koruyarak fiziksel
-   salon düzenine göre serbestçe konumlandırılabilir. Yalnızca kontrol
-   panelinde kullanılır; takip ekranı sade ızgarayı kullanmaya devam
-   eder.
+   salon düzenine göre serbestçe konumlandırılabilir. Aynı kroki iki
+   yerde kullanılır:
+     • Kontrol panelinde — düzenlenebilir (sürükle, ekle, sil)
+     • Takip ekranında  — salt okunur; firmalar masalarının salonun
+       neresinde olduğunu buradan görür.
    ============================================================ */
 import { state, saveState } from '../store.js';
-import { esc, fmtCounter, normalizeName, makeId } from '../utils.js';
-import { liveOf, currentMeeting, tableMeetings } from '../scheduling.js';
+import { esc, fmtClock, fmtCounter, normalizeName, makeId } from '../utils.js';
+import { liveOf, currentMeeting, nextMeeting, tableMeetings } from '../scheduling.js';
 import { renkOf } from '../timers.js';
 import { openModal } from './modal.js';
 import { render } from './router.js';
 import { removeTable } from '../tables.js';
+import { SEKIL_TIPLERI, SEKIL_GRUPLARI, sekilTipi } from '../shapeTypes.js';
 
 export let layoutView = false;   // false=liste (ızgara), true=salon planı
 export let editMode = false;     // salon planında sürükleyerek konum değiştirme
@@ -32,9 +36,12 @@ export function toggleEditMode() {
   render();
 }
 
-function hallCardHtml(t) {
+/* follow=true → takip ekranı: kumanda düğmeleri gizlenir, bunun
+   yerine masanın tüm sırasını açan "sıradaki" satırı gösterilir. */
+function hallCardHtml(t, follow) {
   const L = liveOf(t.id);
   const m = currentMeeting(t.id);
+  const n = nextMeeting(t.id);
   const list = tableMeetings(t.id);
   const bitti = L.index >= list.length && list.length > 0;
   const cls = L.running && L.secondsLeft > 60 ? 'running' : (L.running && L.secondsLeft > 0 ? 'warn' : (L.secondsLeft <= 0 && L.ended ? 'over' : ''));
@@ -49,51 +56,76 @@ function hallCardHtml(t) {
            <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
          </div>`;
 
-  const eylemler = (editMode || !list.length || bitti) ? '' : `
-    <div class="tc-actions">
+  let alt = '';
+  if (follow && list.length && !bitti) {
+    const ozet = n ? `Sıradaki: ${esc(n.from)} ↔ ${esc(n.to)} · ${fmtClock(n.start)}` : 'Son görüşme';
+    alt = `<button type="button" class="hall-next" onclick="masaProgramiGoster('${t.id}')"
+             title="${esc(t.title)} — tüm görüşme sırası"><span class="hall-next-text">${ozet}</span><span class="tc-next-more">▸</span></button>`;
+  } else if (!follow && !editMode && list.length && !bitti) {
+    alt = `<div class="tc-actions">
       <button type="button" class="green" onclick="baslat('${t.id}')" ${L.running ? 'disabled' : ''}>▶</button>
       <button type="button" class="red" onclick="durdur('${t.id}')" ${!L.running ? 'disabled' : ''}>⏸</button>
       <button type="button" class="yellow" onclick="sonraki('${t.id}')">▶▶</button>
     </div>`;
+  }
 
   const secili = editMode && hallSelection && hallSelection.type === 'table' && hallSelection.id === t.id;
   return `
     <div class="hall-card table-card ${cls} ${editMode ? 'draggable' : ''} ${secili ? 'selected' : ''}" data-card="${t.id}" data-hall-id="${t.id}" style="${stil}">
       <div class="tc-head">${esc(t.title)}</div>
-      ${govde}${eylemler}
+      ${govde}${alt}
     </div>`;
 }
 
 function shapeHtml(sh) {
   const stil = `left:${sh.x}%;top:${sh.y}%;width:${sh.w}%;height:${sh.h}%;`;
   const secili = editMode && hallSelection && hallSelection.type === 'shape' && hallSelection.id === sh.id;
+  const tip = sekilTipi(sh.kind);
+  // Etiketi olmayan tipler (duvar) yalnızca biçim olarak çizilir.
+  const icerik = sh.label
+    ? `<span class="hall-shape-label">${esc(sh.label)}</span>`
+    : '';
   return `
-    <div class="hall-shape ${sh.kind} ${editMode ? 'draggable' : ''} ${secili ? 'selected' : ''}" data-shape-id="${sh.id}" style="${stil}">
-      <span class="hall-shape-label">${esc(sh.label)}</span>
+    <div class="hall-shape ${sh.kind} ${editMode ? 'draggable' : ''} ${secili ? 'selected' : ''}" data-shape-id="${sh.id}" style="${stil}" title="${esc(sh.label || tip.ad)}">
+      ${icerik}
     </div>`;
 }
 
-/* Salon planına dikdörtgen/daire/not şeklinde dekoratif bir öğe
-   ekler (sahne, giriş, bekleme alanı vb. işaretlemek için). Bu
-   öğeler görüşme eşleştirmesini hiçbir şekilde etkilemez. */
+/* Salon krokisine bir öğe ekler (sahne, giriş, ikram alanı vb.).
+   Bu öğeler görüşme eşleştirmesini hiçbir şekilde etkilemez. */
 export function addShape(kind) {
-  const varsayilan = kind === 'circle' ? 'ALAN' : kind === 'note' ? 'NOT' : 'SAHNE';
+  const tip = sekilTipi(kind);
+  const ekle = (etiket) => {
+    const sayi = state.shapes.length;
+    state.shapes.push({
+      id: makeId('sh'), kind, label: etiket,
+      x: 6 + (sayi % 4) * 22, y: 74 + Math.floor(sayi / 4) * 16,
+      w: tip.w, h: tip.h
+    });
+    saveState(); render();
+  };
+  // Etiketsiz tipler (duvar) doğrudan eklenir, metin sorulmaz.
+  if (!tip.etiket) { ekle(''); return; }
   openModal({
-    title: kind === 'circle' ? 'Daire Ekle' : kind === 'note' ? 'Not Ekle' : 'Dikdörtgen Ekle',
+    title: `${tip.ad} Ekle`,
     message: 'Üzerinde görünecek kısa metni girin:',
-    showInput: true, inputValue: varsayilan, confirmText: 'EKLE',
-    onConfirm: (deger) => {
-      const etiket = normalizeName(deger) || varsayilan;
-      const sayi = state.shapes.length;
-      const boyut = kind === 'circle' ? { w: 12, h: 14 } : kind === 'note' ? { w: 16, h: 9 } : { w: 20, h: 12 };
-      state.shapes.push({
-        id: makeId('sh'), kind, label: etiket,
-        x: 6 + (sayi % 4) * 22, y: 74 + Math.floor(sayi / 4) * 16,
-        ...boyut
-      });
-      saveState(); render();
-    }
+    showInput: true, inputValue: tip.etiket, confirmText: 'EKLE',
+    onConfirm: (deger) => ekle(normalizeName(deger) || tip.etiket)
   });
+}
+
+/* Düzenleme araç çubuğundaki şekil ekleme menüsü. */
+export function sekilMenusuHtml() {
+  const gruplar = SEKIL_GRUPLARI.map(g => `
+    <optgroup label="${g.baslik}">
+      ${g.tipler.map(k => `<option value="${k}">${SEKIL_TIPLERI[k].ikon}  ${esc(SEKIL_TIPLERI[k].ad)}</option>`).join('')}
+    </optgroup>`).join('');
+  return `
+    <select class="sekil-menu" aria-label="Krokiye şekil ekle"
+            onchange="if(this.value){addShape(this.value);this.selectedIndex=0}">
+      <option value="">+ Şekil ekle…</option>
+      ${gruplar}
+    </select>`;
 }
 
 export function removeShape(id) {
@@ -101,11 +133,12 @@ export function removeShape(id) {
   saveState(); render();
 }
 
-export function renderHallCanvas() {
+/* follow=true → takip ekranındaki salt okunur kroki. */
+export function renderHallCanvas(follow) {
   return `
-    <div class="hall-canvas" id="hallCanvas">
+    <div class="hall-canvas${follow ? ' hall-follow' : ''}" id="hallCanvas">
       ${state.shapes.map(shapeHtml).join('')}
-      ${state.tables.map(hallCardHtml).join('')}
+      ${state.tables.map(t => hallCardHtml(t, follow)).join('')}
     </div>`;
 }
 

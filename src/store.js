@@ -2,6 +2,7 @@
    DURUM (STATE) — tek kaynak, localStorage'da saklanır.
    ============================================================ */
 import { makeId, normalizeName } from './utils.js';
+import { GECERLI_TIPLER, sekilTipi } from './shapeTypes.js';
 
 export const STORAGE_KEY = 'b2b_match_state';
 
@@ -79,15 +80,21 @@ export function normalizeState(raw) {
 
   const gecerliSayi = (v) => Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100;
   const shapes = Array.isArray(s.shapes)
-    ? s.shapes.filter(sh => sh && typeof sh === 'object').map((sh, i) => ({
-        id: typeof sh.id === 'string' ? sh.id : makeId('sh'),
-        kind: ['rect', 'circle', 'note'].includes(sh.kind) ? sh.kind : 'rect',
-        label: normalizeName(sh.label) || 'NOT',
-        x: gecerliSayi(sh.x) ? Number(sh.x) : 10 + i * 6,
-        y: gecerliSayi(sh.y) ? Number(sh.y) : 70,
-        w: gecerliSayi(sh.w) ? Number(sh.w) : 12,
-        h: gecerliSayi(sh.h) ? Number(sh.h) : 10
-      }))
+    ? s.shapes.filter(sh => sh && typeof sh === 'object').map((sh, i) => {
+        const kind = GECERLI_TIPLER.includes(sh.kind) ? sh.kind : 'rect';
+        const tip = sekilTipi(kind);
+        return {
+          id: typeof sh.id === 'string' ? sh.id : makeId('sh'),
+          kind,
+          // Etiket boş olabilir (örn. duvar) — bu yüzden yalnızca
+          // tanımsızsa tipin varsayılanına düşülür.
+          label: typeof sh.label === 'string' ? normalizeName(sh.label) : tip.etiket,
+          x: gecerliSayi(sh.x) ? Number(sh.x) : 10 + i * 6,
+          y: gecerliSayi(sh.y) ? Number(sh.y) : 70,
+          w: gecerliSayi(sh.w) ? Number(sh.w) : tip.w,
+          h: gecerliSayi(sh.h) ? Number(sh.h) : tip.h
+        };
+      })
     : [];
 
   const requests = (Array.isArray(s.requests) ? s.requests : []).map((r, i) => ({

@@ -152,6 +152,21 @@ label{display:block;margin-bottom:5px;color:var(--gray-dim);font-family:var(--fo
 .hall-shape.circle{border-radius:50%}
 .hall-shape.note{border-style:solid;border-color:var(--yellow);background:rgba(138,91,10,.10);color:var(--yellow)}
 .hall-shape-label{overflow-wrap:anywhere;line-height:1.18}
+
+/* --- Kroki öğe tipleri --- */
+/* Yapısal: dolu ve koyu, salonun sınırlarını okutur */
+.hall-shape.stage{border-style:solid;border-color:var(--ink);background:rgba(22,28,40,.10);color:var(--ink)}
+.hall-shape.wall{border:0;border-radius:2px;background:var(--ink);opacity:.75}
+/* Dolaşım: yeşil = giriş/yön, kırmızı = çıkış */
+.hall-shape.door{border-style:solid;border-color:var(--green);background:rgba(21,122,70,.12);color:var(--green)}
+.hall-shape.exit{border-style:solid;border-color:var(--red);background:rgba(195,44,44,.10);color:var(--red)}
+.hall-shape.arrow{border:0;background:transparent;color:var(--blue);font-size:clamp(14px,9cqw,30px)}
+/* Hizmet alanları: sakin mavi ton, masalarla yarışmaz */
+.hall-shape.info,
+.hall-shape.catering,
+.hall-shape.waiting,
+.hall-shape.wc{border-style:solid;border-color:var(--blue);background:var(--blue-soft);color:var(--blue-dim)}
+.hall-shape.wc{border-radius:50%}
 .hall-shape.draggable{cursor:grab;touch-action:none;user-select:none}
 .hall-shape.draggable:hover{border-color:var(--blue);color:var(--blue)}
 .hall-shape.taken{cursor:grabbing;z-index:5;box-shadow:0 8px 20px rgba(27,34,48,.18)}
@@ -189,6 +204,32 @@ label{display:block;margin-bottom:5px;color:var(--gray-dim);font-family:var(--fo
 .follow-screen .tc-next{font-size:clamp(11px,2.3cqb,16px);padding-top:clamp(4px,1.2cqb,9px)}
 .follow-screen .tc-next-firms{max-width:65%}
 .follow-progress{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
+
+/* --- Takip ekranı: salon krokisi görünümü ---
+   Kroki ekranı doldurur (sabit 16/9 yerine kalan alanın tamamı);
+   masa konumları yüzde olduğu için her boyutta orantılı ölçeklenir. */
+.follow-kroki{height:100vh;overflow:hidden}
+.follow-kroki .hall-canvas{flex:1;aspect-ratio:auto;min-height:0;height:auto;border-radius:var(--radius-lg)}
+.follow-kroki .hall-card{container-type:size}
+.follow-kroki .hall-card .tc-head{padding:clamp(4px,3cqb,10px) clamp(6px,4cqb,12px);font-size:clamp(10px,9cqb,20px)}
+.follow-kroki .hall-card .tc-body{padding:clamp(4px,3cqb,10px);gap:clamp(2px,2cqb,8px)}
+.follow-kroki .hall-card .tc-pair{font-size:clamp(10px,9cqb,24px)}
+.follow-kroki .hall-card .tc-time{font-size:clamp(18px,26cqb,64px)}
+.follow-kroki .hall-shape{font-size:clamp(9px,11cqb,18px)}
+
+/* Kroki kartının alt satırı — masanın tüm sırasını açar. */
+.hall-next{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;
+  background:transparent;border:0;border-top:1px solid var(--border-soft);border-radius:0;box-shadow:none;
+  font-family:var(--font-body);font-weight:400;letter-spacing:0;color:var(--gray);
+  font-size:clamp(8px,5cqb,13px);padding:clamp(3px,2cqb,7px) 6px;cursor:pointer;
+  transition:background-color .14s var(--ease),color .14s var(--ease)}
+.hall-next-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hall-next:hover{filter:none;box-shadow:none;background:var(--blue-soft);color:var(--blue-dim)}
+.hall-next:active{transform:none}
+.hall-next:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+
+/* Krokiye şekil ekleme menüsü (düzenleme araç çubuğu). */
+.sekil-menu{width:auto;min-width:150px;padding:5px 8px;font-size:12px;border-radius:6px;cursor:pointer}
 
 /* ---------- QR ekranı ---------- */
 .qr-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 24px}

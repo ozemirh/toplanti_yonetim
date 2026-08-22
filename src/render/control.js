@@ -20,7 +20,7 @@ import { taninmayanAdlar } from '../firmMatching.js';
 import { sesAcik, startTicking } from '../timers.js';
 import { tableCardHtml } from './tableCard.js';
 import { scheduleTableHtml, requestListHtml } from './scheduleTable.js';
-import { renderHallCanvas, bindHallDragging, layoutView, editMode, getHallSelection } from './hall.js';
+import { renderHallCanvas, bindHallDragging, layoutView, editMode, getHallSelection, sekilMenusuHtml } from './hall.js';
 
 /* ---------- Paneller ---------- */
 
@@ -42,10 +42,7 @@ function masalarPanel() {
       ${layoutView && editMode ? `
         <div class="row" style="padding:8px 12px;border-bottom:1px solid var(--border-soft);background:var(--card-alt)">
           <button type="button" class="secondary small" onclick="addTable()">+ MASA EKLE</button>
-          <span class="hint" style="font-size:11px;font-weight:600;margin-left:6px">Şekil ekle:</span>
-          <button type="button" class="secondary small" onclick="addShape('rect')">▭ Dikdörtgen</button>
-          <button type="button" class="secondary small" onclick="addShape('circle')">◯ Daire</button>
-          <button type="button" class="secondary small" onclick="addShape('note')">✎ Not</button>
+          ${sekilMenusuHtml()}
           <span style="flex:1"></span>
           <button type="button" class="secondary small" onclick="renameSelectedHallItem()" ${hallSelection ? '' : 'disabled'}>✎ ADINI DEĞİŞTİR</button>
           <button type="button" class="red small" onclick="deleteSelectedHallItem()" ${hallSelection ? '' : 'disabled'}>🗑 SEÇİLENİ SİL</button>

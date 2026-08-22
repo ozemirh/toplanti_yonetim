@@ -20,6 +20,7 @@ import { qrHata, qrGorseliYukle, qrGorseliSil } from './render/qr.js';
 import { deleteSelectedHallItem, renameSelectedHallItem, addShape, toggleLayoutView, toggleEditMode } from './render/hall.js';
 import { masaProgramiGoster } from './render/scheduleTable.js';
 import { kilavuzGoster } from './render/guide.js';
+import { toggleFollowView } from './render/follow.js';
 
 import { sesiAc, baslat, durdur, sifirla, sonraki, stopTicking } from './timers.js';
 import {
@@ -40,7 +41,7 @@ import { toggleAutoSync, senkronDurdur } from './sync.js';
 /* ---------- Satır içi (onclick=) tutamaçlar için genel alana bağlama ---------- */
 Object.assign(window, {
   // gezinme
-  openFollow, closeFollow, openQr, closeQr, openShare,
+  openFollow, closeFollow, openQr, closeQr, openShare, toggleFollowView,
   // kullanım kılavuzu
   kilavuzGoster,
   // sesli anons

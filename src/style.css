@@ -92,6 +92,20 @@ label{display:block;margin-bottom:5px;color:var(--gray-dim);font-family:var(--fo
 .tc-next{width:100%;border-top:1px solid var(--border-soft);padding-top:7px;color:var(--gray);font-size:clamp(9px,3.4cqw,11px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tc-next b{color:var(--yellow)}
 .tc-next-firms{display:inline-block;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+/* Takip ekranında "Sıradaki" satırı, masanın tüm sırasını açan bir
+   düğmedir; düğme görünümü değil satır görünümü korunur. */
+.tc-next-btn{display:flex;align-items:baseline;justify-content:center;gap:6px;
+  background:transparent;border:0;border-top:1px solid var(--border-soft);border-radius:0;
+  font-family:var(--font-body);font-weight:400;letter-spacing:0;text-align:center;box-shadow:none;
+  padding:7px 4px 2px;cursor:pointer;transition:background-color .14s var(--ease),color .14s var(--ease)}
+/* Özet metin daralır, "tümü" ibaresi her zaman görünür kalır. */
+.tc-next-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tc-next-more{flex:0 0 auto}
+.tc-next-btn:hover{filter:none;box-shadow:none;background:var(--blue-soft);color:var(--blue-dim)}
+.tc-next-btn:active{transform:none}
+.tc-next-btn:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.tc-next-more{color:var(--blue);font-weight:700;white-space:nowrap}
+.tc-next-btn:hover .tc-next-more{color:var(--blue-dim)}
 .tc-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 11px 11px}
 .tc-actions .wide{grid-column:1/-1}
 .status-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-family:var(--font-mono);font-size:9.5px;font-weight:700;background:rgba(255,255,255,.22);letter-spacing:.02em}

@@ -18,6 +18,7 @@ import { stopPolling } from './render/polling.js';
 import { handleEmbedded, openShare } from './render/share.js';
 import { qrHata, qrGorseliYukle, qrGorseliSil } from './render/qr.js';
 import { deleteSelectedHallItem, addShape, toggleLayoutView, toggleEditMode } from './render/hall.js';
+import { masaProgramiGoster } from './render/scheduleTable.js';
 
 import { sesiAc, baslat, durdur, sifirla, sonraki, stopTicking } from './timers.js';
 import {
@@ -43,6 +44,8 @@ Object.assign(window, {
   sesiAc,
   // sayaçlar
   baslat, durdur, sifirla, sonraki,
+  // masa programı (takip ekranındaki "Sıradaki" düğmesi)
+  masaProgramiGoster,
   // salon planı
   toggleLayoutView, toggleEditMode, addShape, deleteSelectedHallItem,
   // masalar / ayarlar

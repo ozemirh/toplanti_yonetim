@@ -5,6 +5,20 @@ import { esc, fmtClock, fmtCounter } from '../utils.js';
 import { liveOf, currentMeeting, nextMeeting, tableMeetings } from '../scheduling.js';
 import { renkOf } from '../timers.js';
 
+/* Kartın alt satırı — sıradaki görüşmeyi özetler.
+   Takip ekranında (follow) bu satır tıklanabilir bir düğmedir:
+   masanın tüm görüşme sırasını modal olarak açar. Kontrol
+   panelinde ise düz metin kalır; oradaki program tablosu
+   zaten aynı bilgiyi gösteriyor. */
+function nextHtml(t, n, follow) {
+  const ozet = n
+    ? `Sıradaki: <b class="tc-next-firms" title="${esc(n.from)} ↔ ${esc(n.to)}">${esc(n.from)} ↔ ${esc(n.to)}</b> · ${fmtClock(n.start)}`
+    : 'Bu masada son görüşme';
+  if (!follow) return `<div class="tc-next">${ozet}</div>`;
+  return `<button type="button" class="tc-next tc-next-btn" onclick="masaProgramiGoster('${t.id}')"
+            title="${esc(t.title)} masasının tüm görüşme sırasını göster"><span class="tc-next-text">${ozet}</span><span class="tc-next-more">▸ tümü</span></button>`;
+}
+
 export function tableCardHtml(t, follow) {
   const L = liveOf(t.id);
   const m = currentMeeting(t.id);
@@ -22,9 +36,7 @@ export function tableCardHtml(t, follow) {
            <div class="tc-pair"><span class="tc-firm" title="${esc(m.from)}">${esc(m.from)}</span><span class="tc-sep">↔</span><span class="tc-firm" title="${esc(m.to)}">${esc(m.to)}</span></div>
            <div class="tc-label">Kalan Süre</div>
            <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
-           <div class="tc-next">
-             ${n ? `Sıradaki: <b class="tc-next-firms" title="${esc(n.from)} ↔ ${esc(n.to)}">${esc(n.from)} ↔ ${esc(n.to)}</b> · ${fmtClock(n.start)}` : 'Bu masada son görüşme'}
-           </div>
+           ${nextHtml(t, n, follow)}
          </div>`;
 
   const eylemler = follow || !list.length || bitti ? '' : `

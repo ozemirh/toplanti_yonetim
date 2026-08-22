@@ -45,7 +45,7 @@ function hallCardHtml(t) {
     : bitti
       ? `<div class="tc-body"><div class="tc-label">Tamamlandı</div></div>`
       : `<div class="tc-body">
-           <div class="tc-pair">${esc(m.from)}<br>↔<br>${esc(m.to)}</div>
+           <div class="tc-pair"><span class="tc-firm" title="${esc(m.from)}">${esc(m.from)}</span><span class="tc-sep">↔</span><span class="tc-firm" title="${esc(m.to)}">${esc(m.to)}</span></div>
            <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
          </div>`;
 

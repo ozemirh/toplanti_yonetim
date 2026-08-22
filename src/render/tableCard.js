@@ -19,11 +19,11 @@ export function tableCardHtml(t, follow) {
       ? `<div class="tc-body"><div class="tc-label">Tamamlandı</div><div class="tc-pair">Bu masadaki tüm görüşmeler bitti</div></div>`
       : `<div class="tc-body">
            <div class="tc-label">Görüşen Firmalar</div>
-           <div class="tc-pair">${esc(m.from)}<br>↔<br>${esc(m.to)}</div>
+           <div class="tc-pair"><span class="tc-firm" title="${esc(m.from)}">${esc(m.from)}</span><span class="tc-sep">↔</span><span class="tc-firm" title="${esc(m.to)}">${esc(m.to)}</span></div>
            <div class="tc-label">Kalan Süre</div>
            <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
            <div class="tc-next">
-             ${n ? `Sıradaki: <b>${esc(n.from)} ↔ ${esc(n.to)}</b> · ${fmtClock(n.start)}` : 'Bu masada son görüşme'}
+             ${n ? `Sıradaki: <b class="tc-next-firms" title="${esc(n.from)} ↔ ${esc(n.to)}">${esc(n.from)} ↔ ${esc(n.to)}</b> · ${fmtClock(n.start)}` : 'Bu masada son görüşme'}
            </div>
          </div>`;
 

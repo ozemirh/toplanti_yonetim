@@ -25,6 +25,7 @@ export function renderControl() {
           <button type="button" onclick="openFollow()">TAKİP EKRANI</button>
           <button type="button" class="secondary" onclick="openQr()">QR KODU</button>
           <button type="button" class="secondary" onclick="openShare()">PAYLAŞ / KAYDET</button>
+          <button type="button" class="ghost" onclick="kilavuzGoster()" title="Adım adım kullanım kılavuzu">? KILAVUZ</button>
         </div>
       </section>
 

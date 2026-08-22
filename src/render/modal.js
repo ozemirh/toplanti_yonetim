@@ -35,7 +35,9 @@ export function openModal(o) {
   c.addEventListener('click', () => { const v = inp ? inp.value : true; closeModal(); if (onConfirm) onConfirm(v); });
   document.getElementById('modalCancel')?.addEventListener('click', closeModal);
   document.addEventListener('keydown', modalKey);
-  if (inp) { inp.addEventListener('keydown', e => { if (e.key === 'Enter') c.click(); }); setTimeout(() => { inp.focus(); inp.select(); }, 0); }
-  else setTimeout(() => c.focus(), 0);
+  // Odaklama kutuyu kaydırmamalı: uzun içerikli modaller (kılavuz, masa
+  // programı, kurulum adımları) aksi hâlde en altta açılırdı.
+  if (inp) { inp.addEventListener('keydown', e => { if (e.key === 'Enter') c.click(); }); setTimeout(() => { inp.focus({ preventScroll: true }); inp.select(); }, 0); }
+  else setTimeout(() => c.focus({ preventScroll: true }), 0);
   if (typeof onOpen === 'function') onOpen(ov);
 }

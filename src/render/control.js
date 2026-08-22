@@ -76,6 +76,22 @@ export function renderControl() {
               ${scheduleTableHtml()}
             </div>
           </section>
+
+          ${state.unscheduled.length ? `
+          <section class="panel" style="border-color:var(--yellow)">
+            <div class="panel-header" style="background:rgba(181,121,14,.12)"><h2>⚠ Masalara Yerleştirilemeyen Talepler</h2><span>${state.unscheduled.length}</span></div>
+            <div class="panel-body">
+              <p class="hint">Bu görüşmeler için etkinlik saatleri içinde iki firmanın ve bir masanın birlikte boş olduğu bir zaman bulunamadı. Etkinlik bitiş saatini uzatmak, masa eklemek ya da bu firmaların diğer görüşme sürelerini kısaltmak çözebilir.</p>
+              <div class="sched" style="max-height:260px"><table>
+                <thead><tr><th>Firmalar</th><th>Süre</th><th>Sebep</th></tr></thead>
+                <tbody>${state.unscheduled.map(u => `<tr>
+                  <td class="pair">${esc(u.from)} ↔ ${esc(u.to)}</td>
+                  <td>${u.duration} dk</td>
+                  <td>${esc(u.reason || '')}</td>
+                </tr>`).join('')}</tbody>
+              </table></div>
+            </div>
+          </section>` : ''}
         </div>
 
         <div style="display:grid;gap:14px;min-width:0">

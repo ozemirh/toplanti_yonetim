@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2B Görüşme Eşleştirme Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F9; --bg-glow:radial-gradient(circle at 50% -10%,rgba(59,91,219,.06),transparent 40%);
+  --card:#FFF; --card-alt:#F7F9FC; --header:#EEF1F7;
+  --blue:#3457D5; --blue-dim:#23408F; --green:#1E9E5A; --yellow:#B5790E; --red:#D93A3A;
+  --ink:#1B2230; --gray:#626D82; --gray-dim:#8892A3;
+  --border:#DDE3ED; --border-soft:#E6EAF2;
+  --font-display:'Space Grotesk','Segoe UI',sans-serif;
+  --font-body:'Inter','Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono','Consolas',monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{min-height:100vh;font-family:var(--font-body);background:var(--bg-glow),var(--bg);background-attachment:fixed;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font-family:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:8px 12px;font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.02em;color:#fff;background:var(--blue);transition:filter .12s,transform .08s,box-shadow .12s;white-space:nowrap}
+button:hover{filter:brightness(1.1)}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.secondary{background:var(--header);color:var(--ink);border:1px solid var(--border)}
+button.green{background:var(--green)}
+button.yellow{background:var(--yellow)}
+button.red{background:var(--red)}
+button.ghost{background:transparent;border:1px solid var(--border);color:var(--gray)}
+button.ghost:hover{color:var(--ink)}
+button.small{padding:4px 7px;font-size:10px;border-radius:6px}
+button:disabled{opacity:.45;cursor:not-allowed;filter:none}
+input,textarea,select{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink);font-size:13.5px;outline:none;transition:border-color .12s,box-shadow .12s}
+textarea{resize:vertical;min-height:80px;font-family:var(--font-mono);font-size:12px}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(52,87,213,.16)}
+label{display:block;margin-bottom:5px;color:var(--gray-dim);font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+.shell{width:min(100% - 24px,1640px);margin:0 auto;padding:14px 0 32px;display:grid;gap:12px}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.topbar h1{margin:0;font-family:var(--font-display);font-size:clamp(18px,2vw,26px);letter-spacing:-.01em}
+.top-actions{display:flex;flex-wrap:wrap;gap:7px}
+.panel{border:1px solid var(--border-soft);border-radius:13px;background:var(--card);box-shadow:0 4px 16px rgba(27,34,48,.05);overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;background:var(--header);border-bottom:1px solid var(--border-soft)}
+.panel-header h2{margin:0;font-family:var(--font-display);font-size:14.5px;font-weight:600}
+.panel-header span{color:var(--gray-dim);font-family:var(--font-mono);font-size:10.5px}
+.panel-body{padding:12px;display:flex;flex-direction:column;gap:10px}
+.panel-body>*{flex:0 0 auto}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.section-label{display:flex;align-items:center;gap:8px;color:var(--gray-dim);font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border-soft)}
+.hint{color:var(--gray);font-size:12px;line-height:1.5;margin:0}
+.empty-note{padding:16px;text-align:center;color:var(--gray);font-size:12.5px;font-style:italic}
+
+.main-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:12px;align-items:start}
+@media (max-width:1240px){.main-layout{grid-template-columns:1fr}}
+
+/* Masa kartları */
+.tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px}
+.table-card{container-type:inline-size;container-name:tcard;border:1.5px solid var(--border);border-radius:11px;background:#fff;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s}
+.table-card.running{border-color:var(--green)}
+.table-card.warn{border-color:var(--yellow)}
+.table-card.over{border-color:var(--red)}
+.tc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:linear-gradient(180deg,var(--blue),var(--blue-dim));color:#fff;font-family:var(--font-display);font-weight:700;font-size:12.5px;letter-spacing:.03em}
+.tc-body{padding:9px 10px;display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center}
+.tc-label{color:var(--gray-dim);font-family:var(--font-mono);font-size:clamp(7px,3.2cqw,9.5px);font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.tc-pair{font-family:var(--font-display);font-size:clamp(11px,6cqw,15px);font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.tc-time{font-family:var(--font-mono);font-size:clamp(22px,13cqw,34px);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.tc-next{width:100%;border-top:1px solid var(--border-soft);padding-top:6px;color:var(--gray);font-size:clamp(9px,3.4cqw,11px)}
+.tc-next b{color:var(--yellow)}
+.tc-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px 10px}
+.tc-actions .wide{grid-column:1/-1}
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:1px 7px;border-radius:999px;font-family:var(--font-mono);font-size:9.5px;font-weight:600;background:rgba(255,255,255,.2)}
+
+/* Salon planı — sürükle-bırak yerleşim */
+.hall-canvas{position:relative;width:100%;aspect-ratio:16/9;min-height:380px;border:1px solid var(--border-soft);border-radius:11px;overflow:hidden;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent calc(4% - 1px),rgba(52,87,213,.05) calc(4% - 1px),rgba(52,87,213,.05) 4%),
+             repeating-linear-gradient(90deg,transparent 0,transparent calc(4% - 1px),rgba(52,87,213,.05) calc(4% - 1px),rgba(52,87,213,.05) 4%),
+             #FBFCFE}
+.hall-card{position:absolute;box-shadow:0 4px 14px rgba(27,34,48,.10);cursor:default;margin:0}
+.hall-card .tc-body{padding:6px 8px;gap:3px;flex:1;justify-content:center;min-height:0;overflow:hidden}
+.hall-card .tc-pair{font-size:clamp(9px,7cqw,14px);line-height:1.15}
+.hall-card .tc-time{font-size:clamp(16px,15cqw,30px)}
+.hall-card .tc-actions{padding:0 6px 6px;gap:4px}
+.hall-card .tc-actions button{padding:4px 2px;font-size:11px}
+.hall-card.draggable{cursor:grab;touch-action:none;user-select:none}
+.hall-card.draggable:hover{border-color:var(--blue)}
+.hall-card.taken{cursor:grabbing;z-index:5;box-shadow:0 10px 26px rgba(27,34,48,.22)}
+.hall-card.draggable.selected{outline:3px solid var(--blue);outline-offset:2px;z-index:4}
+
+/* Salon planındaki dekoratif şekiller (sahne, giriş, bekleme alanı vb.)
+   — görüşme eşleştirmesini etkilemezler, yalnızca görsel referanstır. */
+.hall-shape{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;
+  border:1.5px dashed var(--gray-dim);background:rgba(136,146,163,.08);color:var(--gray);
+  font-family:var(--font-display);font-weight:700;font-size:clamp(9px,5cqw,13px);letter-spacing:.03em;text-transform:uppercase;
+  border-radius:8px;overflow:hidden;margin:0}
+.hall-shape.circle{border-radius:50%}
+.hall-shape.note{border-style:solid;border-color:var(--yellow);background:rgba(181,121,14,.08);color:#8a5c0a}
+.hall-shape-label{overflow-wrap:anywhere;line-height:1.15}
+.hall-shape.draggable{cursor:grab;touch-action:none;user-select:none}
+.hall-shape.draggable:hover{border-color:var(--blue);color:var(--blue)}
+.hall-shape.taken{cursor:grabbing;z-index:5;box-shadow:0 8px 20px rgba(27,34,48,.18)}
+.hall-shape.draggable.selected{outline:3px solid var(--blue);outline-offset:2px;border-color:var(--blue);color:var(--blue);z-index:4}
+
+/* Program tablosu */
+.sched{border:1px solid var(--border-soft);border-radius:9px;overflow:auto;max-height:480px;background:var(--card-alt)}
+.sched table{width:100%;border-collapse:collapse;font-size:12px}
+.sched th{position:sticky;top:0;background:var(--header);color:var(--gray-dim);font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:7px 9px;border-bottom:1px solid var(--border-soft);z-index:1}
+.sched td{padding:6px 9px;border-bottom:1px solid var(--border-soft)}
+.sched tr:last-child td{border-bottom:0}
+.sched .clock{font-family:var(--font-mono);font-weight:700;color:var(--blue);white-space:nowrap}
+.sched .pair{font-weight:600}
+.sched tr.done{opacity:.5}
+.sched tr.now{background:rgba(52,87,213,.08)}
+.badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:9.5px;font-family:var(--font-mono);font-weight:600;background:rgba(30,158,90,.14);color:var(--green);margin-left:6px}
+.badge.warn{background:rgba(181,121,14,.16);color:var(--yellow)}
+
+/* Takip ekranı */
+.follow-screen{min-height:100vh;padding:14px;display:flex;flex-direction:column;gap:12px}
+.follow-screen .topbar{padding-right:0}
+.follow-screen h1{font-size:clamp(18px,2vw,28px)}
+/* Satırlar mevcut ekrana orantılı sığar; masa sayısı arttıkça
+   satırlar daralır, azaldıkça büyür. Çok fazla masa olursa (satır
+   140px altına inerse) sayfa güvenlik ağı olarak kaydırılabilir. */
+.follow-screen .tables-grid{flex:1;grid-auto-rows:minmax(140px,1fr);grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.follow-screen .table-card{min-height:0}
+.follow-screen .tc-body{flex:1;justify-content:center;min-height:0;overflow:hidden}
+.follow-screen .tc-time{font-size:clamp(30px,15cqw,86px)}
+.follow-screen .tc-pair{font-size:clamp(14px,7cqw,32px)}
+.follow-screen .tc-next{font-size:clamp(10px,3.4cqw,14px)}
+.follow-progress{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
+
+/* QR ekranı */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;text-align:center}
+.qr-box{background:#fff;padding:16px;border-radius:14px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+/* QR her zaman kare bir alanda ve orantısı korunarak gösterilir */
+.qr-box img,.qr-box canvas{display:block;width:min(70vw,420px);height:min(70vw,420px);object-fit:contain;image-rendering:pixelated}
+.qr-preview{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.qr-preview img{width:120px;height:120px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff;padding:4px}
+.qr-link{font-family:var(--font-mono);font-size:12px;word-break:break-all;max-width:560px;color:var(--gray)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(27,34,48,.42);backdrop-filter:blur(2px)}
+.modal-box{width:min(560px,100%);max-height:88vh;overflow:auto;border:1px solid var(--border-soft);border-radius:16px;background:var(--card);box-shadow:0 24px 60px rgba(27,34,48,.22)}
+.modal-box.wide{width:min(720px,100%)}
+.modal-header{padding:14px 18px;background:var(--header);border-bottom:1px solid var(--border-soft)}
+.modal-header h3{margin:0;font-family:var(--font-display);font-size:16px}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:12px}
+.modal-body p{margin:0;color:var(--gray);font-size:13px;line-height:1.5}
+.modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:0 18px 18px}
+
+details.collapsible{border:1px solid var(--border-soft);border-radius:9px;background:var(--card-alt)}
+details.collapsible>summary{cursor:pointer;padding:9px 12px;color:var(--gray);font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;list-style:none}
+details.collapsible>summary::-webkit-details-marker{display:none}
+details.collapsible>summary::before{content:'▸ ';color:var(--blue)}
+details.collapsible[open]>summary::before{content:'▾ '}
+.collapsible-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
+
+.firm-list{display:flex;flex-wrap:wrap;gap:6px;max-height:190px;overflow:auto;padding:2px}
+.firm-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 6px 4px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card-alt);font-size:12px;font-weight:600}
+.firm-chip button{padding:0 4px;background:none;color:var(--gray-dim);font-size:14px;border-radius:50%}
+.firm-chip button:hover{color:var(--red)}
+.unknown-row{border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;background:var(--card-alt);display:flex;flex-direction:column;gap:7px}
+.unknown-row select{font-size:12px;padding:5px 7px;flex:1;min-width:150px}
+.stat-row{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--border-soft);border-radius:11px;background:var(--card);box-shadow:0 4px 16px rgba(27,34,48,.05);overflow:hidden}
+.sync-box{border:1px solid var(--border-soft);border-radius:10px;padding:10px 12px;background:var(--card-alt)}
+.sync-box.on{border-color:var(--green);background:rgba(30,158,90,.06)}
+.sync-toggle{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600}
+.sync-toggle input{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
+.stat{flex:1;min-width:88px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:9px 14px;border-right:1px solid var(--border-soft)}
+.stat:last-child{border-right:0}
+.stat .k{color:var(--gray-dim);font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase}
+.stat .v{font-family:var(--font-mono);font-size:17px;font-weight:700;color:var(--blue)}
+.stat.warn .v{color:var(--yellow)}
+
+.audio-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--yellow);border-radius:10px;background:rgba(181,121,14,.08);color:var(--yellow);font-size:12px;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   B2B GÖRÜŞME EŞLEŞTİRME SİSTEMİ
+   Akış: Firmalar QR ile Google Form doldurur → talepler tablo
+   olarak içe aktarılır → planlayıcı görüşmeleri masalara dağıtır
+   → etkinlik sırasında sayaç ve sesli anonslar yürütülür.
+   ============================================================ */
+
+const STORAGE_KEY = 'b2b_match_state';
+
+let state = null;
+let route = 'kontrol';
+let tickTimer = null;
+let pollTimer = null;
+let sesAcik = false;
+let layoutView = false;   // false=liste (ızgara), true=salon planı
+let editMode = false;     // salon planında sürükleyerek konum değiştirme
+let hallSelection = null; // {type:'table'|'shape', id} — salon planında seçili öğe
+
+/* ---------- 1) DURUM ---------- */
+
+function defaultState() {
+  return {
+    version: 1,
+    eventName: '',
+    formUrl: '',
+    webAppUrl: '',   // Apps Script web uygulaması adresi (formu tek tıkla üretir)
+    sheetId: '',     // yanıt tablosu kimliği (boşsa betik en son oluşturduğunu kullanır)
+    autoSync: false, // yanıt tablosunu düzenli aralıklarla otomatik çekme
+    lastSyncCount: 0, // en son alınan yanıt satırı sayısı (yinelenmeyi önler)
+    qrImage: '',   // yüklenen sabit QR görseli (data URL)
+    weights: { ilkGorusme: 22, sure: 6, yogunluk: 2.5, karsilikli: 14 },
+    firms: [],        // etkinliğe katılan firmaların resmi listesi
+    firmAliases: {},  // firmaAnahtar → onaylanmış esas firma adı
+    startTime: '09:00',
+    endTime: '18:00',
+    defaultDuration: 15,
+    tables: [
+      { id: 't1', title: 'MASA 1', x: 6, y: 8, w: 26, h: 30 },
+      { id: 't2', title: 'MASA 2', x: 37, y: 8, w: 26, h: 30 },
+      { id: 't3', title: 'MASA 3', x: 68, y: 8, w: 26, h: 30 }
+    ],
+    shapes: [],       // salon planındaki dekoratif öğeler: {id,kind,label,x,y,w,h}
+    requests: [],     // {id, from, to, duration, order, createdAt}
+    schedule: [],     // {id, from, to, duration, tableId, tableTitle, start, end, mutual}
+    unscheduled: [],
+    live: {}          // tableId → {index, running, secondsLeft, warned, ended, startedAt}
+  };
+}
+
+function makeId(p) { return `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`; }
+
+/* Salon planındaki masaları ızgaraya göre otomatik dizer.
+   Sabit kart boyutu (w×h yüzde) kullanır; sıra numarasına göre
+   satır/sütuna yerleştirir. Elle sürüklenen masalar bu diziden
+   etkilenmez (yalnızca sıfırlama veya yeni masa eklerken çağrılır). */
+function autoPosition(index, w = 26, h = 30) {
+  const alanX = 4, alanY = 6, alanW = 92, alanH = 88;
+  const sutun = Math.max(1, Math.floor((alanW + 6) / (w + 6)));
+  const col = index % sutun, row = Math.floor(index / sutun);
+  const bosX = alanW - sutun * w; const araX = sutun > 1 ? bosX / (sutun - 1) : 0;
+  return {
+    x: Math.min(96 - w, alanX + col * (w + araX)),
+    y: Math.min(94 - h, alanY + row * (h + 8)),
+    w, h
+  };
+}
+
+function normalizeName(v) { return String(v || '').trim().replace(/\s+/g, ' '); }
+function upper(v) { return normalizeName(v).toLocaleUpperCase('tr'); }
+
+/* ---------- FİRMA ADI EŞLEŞTİRME ----------
+   Serbest metinle girilen firma adları yazım farkları içerir
+   ("TUSAŞ", "Tusas", "TUSAŞ A.Ş."). Bu yüzden karşılaştırma için
+   agresif bir sadeleştirme yapılır: Türkçe harfler ASCII'ye çevrilir,
+   noktalama ve ticari unvan ekleri atılır. */
+const UNVAN_EKLERI = /\b(a\.?\s?s\.?|ltd|sti|s\.?t\.?i\.?|san|sanayi|tic|ticaret|ve|anonim|limited|sirketi|sirket|holding|grup|group|inc|llc|co)\b/g;
+
+function asciiFold(v) {
+  return String(v || '')
+    .replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g').replace(/[ıİiI]/g, 'i')
+    .replace(/[öÖ]/g, 'o').replace(/[şŞ]/g, 's').replace(/[üÜ]/g, 'u');
+}
+
+/* Karşılaştırma anahtarı — görüntülemede kullanılmaz. */
+function firmaAnahtar(ad) {
+  return asciiFold(String(ad || '').toLocaleLowerCase('tr'))
+    .replace(/[.,\-_/&'"()]/g, ' ')
+    .replace(UNVAN_EKLERI, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/* Levenshtein tabanlı benzerlik oranı (0–1). */
+function benzerlik(a, b) {
+  if (a === b) return 1;
+  if (!a.length || !b.length) return 0;
+  const m = a.length, n = b.length;
+  let onceki = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const simdi = [i];
+    for (let j = 1; j <= n; j++) {
+      simdi[j] = Math.min(onceki[j] + 1, simdi[j - 1] + 1, onceki[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    onceki = simdi;
+  }
+  return 1 - onceki[n] / Math.max(m, n);
+}
+
+/* Girilen adı resmi firma listesindeki karşılığına çevirir.
+   Sıra: tam eşleşme → kullanıcı onaylı eşleme → ham ad. */
+function esasAd(ad) {
+  const k = firmaAnahtar(ad);
+  if (!k) return normalizeName(ad);
+  const resmi = (state.firms || []).find(f => firmaAnahtar(f) === k);
+  if (resmi) return resmi;
+  const eslesme = state.firmAliases && state.firmAliases[k];
+  if (eslesme) return eslesme;
+  return normalizeName(ad);
+}
+
+/* Ad resmi listede var mı? */
+function listedeVar(ad) {
+  const e = esasAd(ad);
+  return (state.firms || []).some(f => firmaAnahtar(f) === firmaAnahtar(e));
+}
+
+/* Listede olmayan adlar için en yakın firmayı önerir. */
+function enYakinFirma(ad) {
+  const k = firmaAnahtar(ad);
+  let iyi = null, skor = 0;
+  (state.firms || []).forEach(f => {
+    const s = benzerlik(k, firmaAnahtar(f));
+    if (s > skor) { skor = s; iyi = f; }
+  });
+  return skor >= 0.6 ? { firma: iyi, skor } : null;
+}
+
+/* Taleplerde geçip resmi listede olmayan adlar. */
+function taninmayanAdlar() {
+  const m = new Map();
+  state.requests.forEach(r => [r.from, r.to].forEach(ad => {
+    if (listedeVar(ad)) return;
+    const k = firmaAnahtar(ad);
+    if (!k) return;
+    if (!m.has(k)) m.set(k, { ad: normalizeName(ad), sayi: 0, oneri: enYakinFirma(ad) });
+    m.get(k).sayi++;
+  }));
+  return [...m.values()];
+}
+
+/* Firma listesi yönetimi */
+function firmaEkleToplu() {
+  const kutu = document.getElementById('firmBox');
+  const gelen = String(kutu?.value || '').split(/[\r\n;]+/).map(normalizeName).filter(Boolean);
+  if (!gelen.length) return;
+  const mevcut = new Set((state.firms || []).map(firmaAnahtar));
+  let eklendi = 0;
+  gelen.forEach(f => { const k = firmaAnahtar(f); if (k && !mevcut.has(k)) { state.firms.push(f); mevcut.add(k); eklendi++; } });
+  state.firms.sort((a, b) => a.localeCompare(b, 'tr'));
+  if (kutu) kutu.value = '';
+  saveState(); render();
+  openModal({ title: 'Firmalar Eklendi', message: `${eklendi} firma eklendi. Toplam ${state.firms.length} firma.` + (gelen.length - eklendi ? ` ${gelen.length - eklendi} tanesi zaten listedeydi.` : ''), alertOnly: true });
+}
+
+/* Google Apps Script kodu üretir. Kullanıcı bunu script.google.com'a
+   yapıştırıp çalıştırdığında form, sorular, firma seçenekleri ve yanıt
+   tablosu tek seferde oluşur. Elle soru hazırlamaya gerek kalmaz. */
+function formBetigiUret() {
+  const ad = state.eventName || 'B2B Görüşme Talebi';
+  const jsFirmalar = JSON.stringify(state.firms, null, 2).replace(/\n/g, '\n  ');
+  const sureler = ['15 dakika', '20 dakika', '30 dakika'];
+  return `/**
+ * ${ad} — görüşme talep formu oluşturucu
+ * Bu kodu script.google.com'da yeni bir projeye yapıştırıp
+ * "formuOlustur" fonksiyonunu çalıştırın.
+ */
+function formuOlustur() {
+  var firmalar = ${jsFirmalar};
+
+  var form = FormApp.create(${JSON.stringify(ad)});
+  form.setDescription(
+    'Görüşmek istediğiniz firmaları işaretleyin. ' +
+    'Seçtiğiniz her firma için ayrı bir görüşme planlanacaktır.'
+  );
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(false);
+
+  form.addListItem()
+    .setTitle('Talep eden firma')
+    .setChoiceValues(firmalar)
+    .setRequired(true);
+
+  form.addCheckboxItem()
+    .setTitle('Görüşmek istediğiniz firmalar')
+    .setChoiceValues(firmalar)
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('Görüşme süresi')
+    .setChoiceValues(${JSON.stringify(sureler)})
+    .setRequired(true);
+
+  // Yanıtların toplanacağı e-tabloyu oluştur ve bağla
+  var tablo = SpreadsheetApp.create(${JSON.stringify(ad + ' — Yanıtlar')});
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, tablo.getId());
+  PropertiesService.getScriptProperties().setProperty('SHEET_ID', tablo.getId());
+
+  Logger.log('FORM ADRESİ (QR için): ' + form.getPublishedUrl());
+  Logger.log('YANIT TABLOSU: ' + tablo.getUrl());
+}`;
+}
+
+/* Bir kez yayınlanacak Apps Script web uygulaması. Yayınlandıktan
+   sonra uygulamadaki düğme bu adrese firma listesini gönderir ve
+   form sunucu tarafında oluşturulur — kod kopyalamaya gerek kalmaz. */
+function webAppBetigiUret() {
+  return `/**
+ * B2B form oluşturucu — WEB UYGULAMASI
+ * Bir kez yayınlayın, sonra uygulamadaki düğmeden tetikleyin.
+ *
+ * Yayınlama: Dağıt > Yeni dağıtım > Tür: Web uygulaması
+ *   Yürüten: Ben  |  Erişim: Yalnızca ben
+ * Çıkan /exec adresini uygulamadaki "Form oluşturucu adresi" alanına yapıştırın.
+ */
+function doPost(e) {
+  try {
+    var veri = JSON.parse(e.parameter.veri);
+    var sonuc = formuKur(veri);
+    return cikti(
+      '<h2>Form oluşturuldu</h2>' +
+      '<p><b>Form adresi (QR için):</b><br><a href="' + sonuc.form + '" target="_blank">' + sonuc.form + '</a></p>' +
+      '<p><b>Yanıt tablosu:</b><br><a href="' + sonuc.tablo + '" target="_blank">' + sonuc.tablo + '</a></p>' +
+      '<p>Form adresini kopyalayıp uygulamadaki <b>Google Form adresi</b> alanına yapıştırın.</p>'
+    );
+  } catch (hata) {
+    return cikti('<h2>Hata</h2><pre>' + hata + '</pre>');
+  }
+}
+
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'veri') return veriGonder(e);
+  return cikti('<h2>Hazır</h2><p>Bu adres çalışıyor. Formu uygulamadaki düğmeden oluşturun.</p>');
+}
+
+/* Yanıt tablosunu JSONP olarak döndürür (çapraz kaynak kısıtı için).
+   Önce istekte sheetId verilmişse onu, yoksa en son oluşturulan
+   formun tablosunu kullanır. */
+function veriGonder(e) {
+  var cb = e.parameter.callback || 'cb';
+  var id = e.parameter.sheetId || PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  var yuk = { headers: [], rows: [] };
+  try {
+    if (id) {
+      var sh = SpreadsheetApp.openById(id).getSheets()[0];
+      var deger = sh.getDataRange().getValues();
+      if (deger.length) { yuk.headers = deger[0].map(String); yuk.rows = deger.slice(1); }
+    }
+  } catch (hata) { yuk.error = String(hata); }
+  var govde = cb + '(' + JSON.stringify(yuk) + ');';
+  return ContentService.createTextOutput(govde).setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+function cikti(html) {
+  return HtmlService.createHtmlOutput(
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<div style="font-family:system-ui;padding:20px;line-height:1.6">' + html + '</div>'
+  ).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function formuKur(veri) {
+  var firmalar = veri.firmalar || [];
+  var ad = veri.ad || 'B2B Görüşme Talebi';
+  var sureler = veri.sureler || ['15 dakika', '20 dakika', '30 dakika'];
+
+  if (!firmalar.length) throw new Error('Firma listesi boş.');
+
+  var form = FormApp.create(ad);
+  form.setDescription(
+    'Görüşmek istediğiniz firmaları işaretleyin. ' +
+    'Seçtiğiniz her firma için ayrı bir görüşme planlanacaktır.'
+  );
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(false);
+
+  form.addListItem().setTitle('Talep eden firma')
+    .setChoiceValues(firmalar).setRequired(true);
+  form.addCheckboxItem().setTitle('Görüşmek istediğiniz firmalar')
+    .setChoiceValues(firmalar).setRequired(true);
+  form.addMultipleChoiceItem().setTitle('Görüşme süresi')
+    .setChoiceValues(sureler).setRequired(true);
+
+  var tablo = SpreadsheetApp.create(ad + ' — Yanıtlar');
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, tablo.getId());
+  PropertiesService.getScriptProperties().setProperty('SHEET_ID', tablo.getId());
+
+  return { form: form.getPublishedUrl(), tablo: tablo.getUrl(), sheetId: tablo.getId() };
+}`;
+}
+
+/* Firma listesini web uygulamasına gönderir. Yeni sekmeye normal bir
+   form gönderimi yapılır; böylece tarayıcılar arası kaynak kısıtı
+   (CORS) sorun çıkarmaz ve sonuç sayfası kullanıcıya gösterilir. */
+/* Firma listesini Apps Script web uygulamasına gönderir.
+   Açılır pencere engellenirse kullanıcıya tıklanabilir bir düğme
+   sunulur; tarayıcılar doğrudan tıklamayla açılan sekmeyi engellemez. */
+/* Bazı önizleme ortamları (örn. sohbet içi dosya önizlemesi) sayfayı
+   "sandbox" bir çerçevede açar; bu durumda yeni pencere/sekme açmak
+   izin diyaloğu bile çıkmadan tamamen engellenir — kullanıcı hiçbir
+   izin veremez. Böyle bir ortamda olup olmadığımızı anlamaya çalışırız. */
+function sandboxIcindeMi() {
+  try {
+    if (window.top === window.self) return false;      // üst pencereyiz, sorun yok
+    const iframeEl = window.frameElement;
+    if (iframeEl && iframeEl.hasAttribute('sandbox')) {
+      const izinler = iframeEl.getAttribute('sandbox') || '';
+      if (!izinler.includes('allow-popups')) return true;
+    }
+  } catch (e) { return true; }   // çapraz kaynak erişimi engellendiyse muhtemelen sandbox
+  return false;
+}
+
+function formGonder(adres, hedefPencere) {
+  const f = document.createElement('form');
+  f.method = 'POST';
+  f.action = adres;
+  f.target = hedefPencere || '_blank';
+  const alan = document.createElement('input');
+  alan.type = 'hidden';
+  alan.name = 'veri';
+  alan.value = JSON.stringify({ ad: state.eventName || 'B2B Görüşme Talebi', firmalar: state.firms });
+  f.appendChild(alan);
+  document.body.appendChild(f);
+  f.submit();
+  document.body.removeChild(f);
+}
+
+function formuOtomatikOlustur() {
+  if (!state.firms.length) {
+    openModal({ title: 'Firma Listesi Boş', message: 'Önce katılımcı firmaları ekleyin.', alertOnly: true });
+    return;
+  }
+  const adres = String(state.webAppUrl || '').trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(adres)) {
+    openModal({
+      title: 'Form Oluşturucu Kurulu Değil',
+      message: 'Tek tıkla form oluşturmak için önce Apps Script web uygulamasını bir kez yayınlamanız gerekiyor. Kurulum adımlarını göstereyim mi?',
+      confirmText: 'KURULUMU GÖSTER',
+      onConfirm: () => webAppKurulum()
+    });
+    return;
+  }
+
+  const sandbox = sandboxIcindeMi();
+
+  // Sonuç, açılır pencere yerine uygulamanın içindeki çerçevede gösterilir.
+  // Bu hem açılır pencere engelleyicisini hem de bazı önizleme
+  // ortamlarının pencere açmayı tamamen kapatmasını devre dışı bırakır.
+  openModal({
+    title: 'Form Oluşturuluyor', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      ${sandbox ? `<div class="audio-bar" style="font-size:12px">⚠ Bu sayfa şu an kısıtlı bir önizleme içinde açık görünüyor. Sonuç aşağıda görünmezse bu dosyayı indirip normal bir tarayıcı sekmesinde açın, orada sorunsuz çalışır.</div>` : ''}
+      <iframe name="b2bCerceve" id="b2bCerceve" class="sonuc-cerceve" title="Form oluşturma sonucu"></iframe>
+      <p class="hint" id="cerceveNot">İşlem sürüyor… İlk çalıştırmada Google izin isteyebilir.</p>
+      <details class="collapsible"><summary>Sonuç görünmüyorsa</summary><div class="collapsible-body">
+        <p class="hint">Bu dosyayı bilgisayarınıza indirip (tarayıcının adres çubuğunda <b>file://</b> ile) açın ya da bir web adresinde yayınlayıp oradan kullanın. "Betiği elle çalıştır" seçeneğiyle de aynı sonucu script.google.com üzerinden doğrudan alabilirsiniz.</p>
+      </div></details>`,
+    onOpen: () => {
+      formGonder(adres, 'b2bCerceve');
+      const cerceve = document.getElementById('b2bCerceve');
+      const not = document.getElementById('cerceveNot');
+      cerceve?.addEventListener('load', () => {
+        if (not) not.textContent = 'Form adresini kopyalayıp Ayarlar bölümündeki "Google Form adresi" alanına yapıştırın.';
+      });
+    }
+  });
+}
+
+function webAppKurulum() {
+  const kod = webAppBetigiUret();
+  openModal({
+    title: 'Tek Tıkla Form Oluşturma — Kurulum', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      <p class="hint">Bu kurulumu <b>bir kez</b> yapmanız yeterli. Sonrasında her etkinlikte tek düğmeyle form oluşturursunuz.</p>
+      ${state.webAppUrl ? `<div class="audio-bar" style="font-size:12px">⚠ Daha önce kurduysanız: betik güncellendi. Aşağıdaki kodu tekrar yapıştırıp <b>Dağıt → Dağıtımları yönet → kalem simgesi → Sürüm: Yeni sürüm → Dağıt</b> yapın.</div>` : ''}
+      <ol class="hint" style="padding-left:18px;line-height:1.9">
+        <li><b>script.google.com</b> → <b>Yeni proje</b></li>
+        <li>Editördeki her şeyi silin, aşağıdaki kodu yapıştırın, kaydedin</li>
+        <li>Sağ üstte <b>Dağıt</b> → <b>Yeni dağıtım</b></li>
+        <li>Dişli simgesi → <b>Web uygulaması</b>; Yürüten: <b>Ben</b>, Erişim: <b>Yalnızca ben</b></li>
+        <li><b>Dağıt</b> → izinleri onaylayın → çıkan <b>/exec</b> ile biten adresi kopyalayın</li>
+        <li>Aşağıdaki alana yapıştırıp kaydedin</li>
+      </ol>
+      <textarea id="webBox" readonly rows="10" style="font-size:11px">${esc(kod)}</textarea>
+      <div class="row">
+        <button type="button" class="green" id="copyWeb">KODU KOPYALA</button>
+        <span id="webStat" style="font-size:12px;font-weight:600"></span>
+      </div>
+      <div><label for="webUrlIn">Form oluşturucu adresi (/exec ile biter)</label>
+        <input id="webUrlIn" type="url" value="${esc(state.webAppUrl)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <button type="button" class="secondary" id="saveWeb">ADRESİ KAYDET</button>`,
+    onOpen: () => {
+      const kutu = document.getElementById('webBox');
+      const st = document.getElementById('webStat');
+      kutu?.addEventListener('focus', () => kutu.select());
+      document.getElementById('copyWeb').onclick = () => kopyalaSessiz(kod, ok => {
+        st.textContent = ok ? 'Kopyalandı.' : 'Kutuya tıklayıp Ctrl+A, Ctrl+C yapın.';
+        st.style.color = ok ? 'var(--green)' : 'var(--red)';
+        if (!ok) { kutu.focus(); kutu.select(); }
+      });
+      document.getElementById('saveWeb').onclick = () => {
+        const v = String(document.getElementById('webUrlIn').value || '').trim();
+        if (v && !/\/exec$/.test(v)) {
+          openModal({ title: 'Adres Hatalı', message: 'Adres /exec ile bitmeli. Dağıtım ekranındaki "Web uygulaması URL" değerini kopyalayın.', alertOnly: true });
+          return;
+        }
+        state.webAppUrl = v; saveState(); closeModal(); render();
+      };
+    }
+  });
+}
+
+function formBetigiGoster() {
+  if (!state.firms.length) {
+    openModal({ title: 'Firma Listesi Boş', message: 'Önce katılımcı firmaları ekleyin; betik listeyi içine gömecek.', alertOnly: true });
+    return;
+  }
+  const kod = formBetigiUret();
+  openModal({
+    title: 'Formu Otomatik Oluştur', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      <p class="hint">Aşağıdaki kod, ${state.firms.length} firmanızı içeren formu ve yanıt tablosunu tek seferde oluşturur. Elle soru hazırlamanıza gerek yok.</p>
+      <ol class="hint" style="padding-left:18px;line-height:1.8">
+        <li><b>script.google.com</b> → <b>Yeni proje</b></li>
+        <li>Editördeki her şeyi silin, aşağıdaki kodu yapıştırın</li>
+        <li>Üstteki <b>▶ Çalıştır</b> düğmesine basın (ilk seferde izin isteyecek, onaylayın)</li>
+        <li>Alttaki <b>Yürütme günlüğü</b>nde form adresi ve tablo bağlantısı görünecek</li>
+      </ol>
+      <textarea id="scriptBox" readonly rows="12" style="font-size:11px">${esc(kod)}</textarea>
+      <div class="row">
+        <button type="button" class="green" id="copyScript">KODU KOPYALA</button>
+        <button type="button" class="secondary" id="dlScript">DOSYA OLARAK İNDİR</button>
+        <span id="scriptStat" style="font-size:12px;font-weight:600"></span>
+      </div>
+      <p class="hint">Firma listesi değişirse betiği yeniden üretip çalıştırın — yeni bir form oluşturur.</p>`,
+    onOpen: () => {
+      const kutu = document.getElementById('scriptBox');
+      const st = document.getElementById('scriptStat');
+      kutu?.addEventListener('focus', () => kutu.select());
+      document.getElementById('copyScript').onclick = () => {
+        kopyalaSessiz(kod, ok => {
+          st.textContent = ok ? 'Kopyalandı.' : 'Kopyalanamadı — kutuya tıklayıp Ctrl+A, Ctrl+C yapın.';
+          st.style.color = ok ? 'var(--green)' : 'var(--red)';
+          if (!ok) { kutu.focus(); kutu.select(); }
+        });
+      };
+      document.getElementById('dlScript').onclick = () => {
+        indirDosya(kod, 'form-olustur.gs', 'text/plain;charset=utf-8');
+        st.textContent = 'İndirildi.'; st.style.color = 'var(--green)';
+      };
+    }
+  });
+}
+
+function kopyalaSessiz(metin, sonuc) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(metin).then(() => sonuc(true)).catch(() => sonuc(false));
+    return;
+  }
+  try {
+    const a = document.createElement('textarea');
+    a.value = metin; a.style.position = 'fixed'; a.style.top = '-1000px';
+    document.body.appendChild(a); a.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(a); sonuc(ok);
+  } catch (e) { sonuc(false); }
+}
+
+function firmaSil(ad) {
+  state.firms = state.firms.filter(f => f !== ad);
+  saveState(); render();
+}
+
+function firmaListesiniTemizle() {
+  openModal({ title: 'Firma Listesini Temizle', message: 'Tüm katılımcı firmalar silinsin mi? Talepler etkilenmez.', confirmText: 'TEMİZLE', danger: true,
+    onConfirm: () => { state.firms = []; saveState(); render(); } });
+}
+
+/* Google Forms açılır listesine yapıştırmak üzere listeyi kopyalar. */
+function firmaListesiniKopyala() {
+  if (!state.firms.length) { openModal({ title: 'Liste Boş', message: 'Önce firmaları ekleyin.', alertOnly: true }); return; }
+  kopyala(state.firms.join('\n'));
+}
+
+/* Tanınmayan bir adı, seçilen resmi firmaya bağlar. */
+function adiEsle(hamAd, hedefFirma) {
+  state.firmAliases = state.firmAliases || {};
+  state.firmAliases[firmaAnahtar(hamAd)] = hedefFirma;
+  saveState(); render();
+}
+
+function adiFirmaYap(hamAd) {
+  const ad = normalizeName(hamAd);
+  if (!ad) return;
+  if (!state.firms.some(f => firmaAnahtar(f) === firmaAnahtar(ad))) state.firms.push(ad);
+  state.firms.sort((a, b) => a.localeCompare(b, 'tr'));
+  saveState(); render();
+}
+
+/* Taleplerde geçen tüm firmaları, esas adlarına göre sayar. */
+function firmaListesi() {
+  const m = new Map();
+  state.requests.forEach(r => {
+    [r.from, r.to].forEach(ad => {
+      const e = esasAd(ad);
+      const k = upper(e);
+      if (!m.has(k)) m.set(k, { ad: e, sayi: 0, varyantlar: new Set() });
+      const kayit = m.get(k);
+      kayit.sayi++;
+      if (normalizeName(ad) !== e) kayit.varyantlar.add(normalizeName(ad));
+    });
+  });
+  return [...m.values()].sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
+}
+
+/* Birbirine benzeyen ama henüz birleştirilmemiş adları bulur. */
+function benzerGruplar(esik = 0.82) {
+  const adlar = firmaListesi().map(f => f.ad);
+  const anahtarlar = adlar.map(firmaAnahtar);
+  const kullanildi = new Set();
+  const gruplar = [];
+  for (let i = 0; i < adlar.length; i++) {
+    if (kullanildi.has(i)) continue;
+    const grup = [adlar[i]];
+    for (let j = i + 1; j < adlar.length; j++) {
+      if (kullanildi.has(j)) continue;
+      const bir = anahtarlar[i], iki = anahtarlar[j];
+      const yakin = bir === iki || benzerlik(bir, iki) >= esik ||
+                    (bir.length > 3 && iki.length > 3 && (bir.startsWith(iki) || iki.startsWith(bir)));
+      if (yakin) { grup.push(adlar[j]); kullanildi.add(j); }
+    }
+    if (grup.length > 1) { kullanildi.add(i); gruplar.push(grup); }
+  }
+  return gruplar;
+}
+
+/* Bir grubu tek bir esas ada bağlar. */
+function firmalariBirlestir(adlar, esas) {
+  state.firmAliases = state.firmAliases || {};
+  adlar.forEach(a => { state.firmAliases[firmaAnahtar(a)] = esas; });
+  saveState();
+}
+
+function parseClock(v) {
+  const m = String(v || '').trim().match(/^(\d{1,2})[:.](\d{2})/);
+  if (!m) return null;
+  const h = Number(m[1]), mi = Number(m[2]);
+  if (h > 23 || mi > 59) return null;
+  return h * 60 + mi;
+}
+function fmtClock(mins) {
+  const w = ((Math.round(mins) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(w / 60)).padStart(2, '0')}:${String(w % 60).padStart(2, '0')}`;
+}
+function fmtCounter(sec) {
+  const neg = sec < 0;
+  const a = Math.abs(Math.floor(sec));
+  return `${neg ? '-' : ''}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`;
+}
+function esc(v) {
+  return String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+function normalizeState(raw) {
+  const d = defaultState();
+  const s = (raw && typeof raw === 'object') ? raw : {};
+  const tables = Array.isArray(s.tables) && s.tables.length
+    ? s.tables.map((t, i) => {
+        const gecerliSayi = (v) => Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100;
+        const pos = gecerliSayi(t?.x) && gecerliSayi(t?.y) ? { x: Number(t.x), y: Number(t.y) } : autoPosition(i);
+        return {
+          id: typeof t?.id === 'string' ? t.id : makeId('t'),
+          title: normalizeName(t?.title) || `MASA ${i + 1}`,
+          x: pos.x, y: pos.y,
+          w: gecerliSayi(t?.w) ? Number(t.w) : 26,
+          h: gecerliSayi(t?.h) ? Number(t.h) : 30
+        };
+      })
+    : d.tables;
+
+  const gecerliSayi = (v) => Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100;
+  const shapes = Array.isArray(s.shapes)
+    ? s.shapes.filter(sh => sh && typeof sh === 'object').map((sh, i) => ({
+        id: typeof sh.id === 'string' ? sh.id : makeId('sh'),
+        kind: ['rect', 'circle', 'note'].includes(sh.kind) ? sh.kind : 'rect',
+        label: normalizeName(sh.label) || 'NOT',
+        x: gecerliSayi(sh.x) ? Number(sh.x) : 10 + i * 6,
+        y: gecerliSayi(sh.y) ? Number(sh.y) : 70,
+        w: gecerliSayi(sh.w) ? Number(sh.w) : 12,
+        h: gecerliSayi(sh.h) ? Number(sh.h) : 10
+      }))
+    : [];
+
+  const requests = (Array.isArray(s.requests) ? s.requests : []).map((r, i) => ({
+    id: typeof r?.id === 'string' ? r.id : makeId('r'),
+    from: normalizeName(r?.from), to: normalizeName(r?.to),
+    duration: Math.max(1, Number(r?.duration) || 15),
+    order: Number.isFinite(Number(r?.order)) ? Number(r.order) : i,
+    createdAt: r?.createdAt || ''
+  })).filter(r => r.from && r.to);
+
+  return {
+    version: 1,
+    eventName: normalizeName(s.eventName),
+    formUrl: String(s.formUrl || '').trim(),
+    webAppUrl: String(s.webAppUrl || '').trim(),
+    sheetId: String(s.sheetId || '').trim(),
+    autoSync: !!s.autoSync,
+    lastSyncCount: Number.isFinite(Number(s.lastSyncCount)) ? Number(s.lastSyncCount) : 0,
+    qrImage: typeof s.qrImage === 'string' && s.qrImage.startsWith('data:image') ? s.qrImage : '',
+    weights: {
+      ilkGorusme: Number.isFinite(Number(s.weights?.ilkGorusme)) ? Number(s.weights.ilkGorusme) : 22,
+      sure: Number.isFinite(Number(s.weights?.sure)) ? Number(s.weights.sure) : 6,
+      yogunluk: Number.isFinite(Number(s.weights?.yogunluk)) ? Number(s.weights.yogunluk) : 2.5,
+      karsilikli: Number.isFinite(Number(s.weights?.karsilikli)) ? Number(s.weights.karsilikli) : 14
+    },
+    firms: Array.isArray(s.firms) ? [...new Set(s.firms.map(normalizeName).filter(Boolean))] : [],
+    firmAliases: (s.firmAliases && typeof s.firmAliases === 'object') ? s.firmAliases : {},
+    startTime: /^\d{2}:\d{2}$/.test(String(s.startTime || '')) ? s.startTime : d.startTime,
+    endTime: /^\d{2}:\d{2}$/.test(String(s.endTime || '')) ? s.endTime : d.endTime,
+    defaultDuration: Math.max(1, Number(s.defaultDuration) || 15),
+    tables,
+    shapes,
+    requests,
+    schedule: Array.isArray(s.schedule) ? s.schedule : [],
+    unscheduled: Array.isArray(s.unscheduled) ? s.unscheduled : [],
+    live: (s.live && typeof s.live === 'object') ? s.live : {}
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? normalizeState(JSON.parse(raw)) : defaultState();
+  } catch (e) { return defaultState(); }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.warn('Yerel kayıt yapılamadı'); }
+}
+
+/* ---------- 2) PLANLAMA MOTORU ---------- */
+
+function pairKey(a, b) { return [upper(a), upper(b)].sort().join(' ||| '); }
+
+/* Karşılıklı ve yinelenen talepleri tek görüşmeye indirger.
+   En erken talep sırası korunur, süre olarak en uzunu alınır. */
+function mergeRequests(requests) {
+  const map = new Map();
+  requests.forEach((req, i) => {
+    // Kullanıcının onayladığı birleştirmeler burada uygulanır ki
+    // aynı firmanın yazım varyantları tek firma sayılsın.
+    const from = esasAd(req.from), to = esasAd(req.to);
+    if (!from || !to || upper(from) === upper(to)) return;
+    const key = pairKey(from, to);
+    const dur = Math.max(1, Number(req.duration) || 15);
+    const ord = Number.isFinite(Number(req.order)) ? Number(req.order) : i;
+    const cur = map.get(key);
+    if (!cur) { map.set(key, { id: req.id, from, to, duration: dur, order: ord, mutual: false }); return; }
+    cur.duration = Math.max(cur.duration, dur);
+    cur.order = Math.min(cur.order, ord);
+    cur.mutual = true;
+  });
+  return [...map.values()].sort((a, b) => a.order - b.order);
+}
+
+const overlaps = (s1, e1, s2, e2) => s1 < e2 && s2 < e1;
+const isFree = (list, s, e) => !list.some(iv => overlaps(s, e, iv.start, iv.end));
+
+/* ---------- PUANLAMA ----------
+   Talepler sabit bir sırayla değil, her adımda yeniden hesaplanan
+   önceliğe göre yerleştirilir. Böylece bir firma görüşme aldıkça
+   sonraki talepleri geriye düşer ve herkes önce bir tur alır. */
+function talepPuani(is, atanan, talepSayisi, agirlik) {
+  const a = atanan[upper(is.from)] || 0;
+  const b = atanan[upper(is.to)] || 0;
+  const yogunluk = talepSayisi[upper(is.from)] || 1;
+
+  let p = 100;
+  p -= agirlik.ilkGorusme * Math.min(a, 6);      // talep eden zaten görüşme aldıysa
+  p -= agirlik.ilkGorusme * Math.min(b, 6) * 0.6; // hedef firma doluysa (daha hafif)
+  p -= agirlik.sure * (is.duration / 15);         // uzun görüşme biraz geride
+  p -= agirlik.yogunluk * Math.min(yogunluk, 12); // çok talep atan firma biraz geride
+  if (is.mutual) p += agirlik.karsilikli;         // iki taraf da istiyorsa öne
+  p -= is.order * 0.02;                           // eşitlikte önce talep eden kazanır
+  return p;
+}
+
+/* İki firmanın ve bir masanın aynı anda boş olduğu en erken anı bulur. */
+/* Öncelik puanına göre bekleyen işleri verilen dolu takvimlere
+   yerleştirir. hem tam program oluşturma (sıfırdan) hem de otomatik
+   senkronizasyonun mevcut programı bozmadan ekleme yapması bu ortak
+   fonksiyon üzerinden çalışır. */
+function isleriYerlestir(bekleyen, tables, firmaBusy, masaBusy, atanan, talepSayisi, agirlik, startM, endM) {
+  const scheduled = [], unscheduled = [];
+  const busyOf = (ad) => {
+    const k = upper(ad);
+    if (!firmaBusy.has(k)) firmaBusy.set(k, []);
+    return firmaBusy.get(k);
+  };
+
+  while (bekleyen.length) {
+    let secilen = 0, enIyi = -Infinity;
+    bekleyen.forEach((is, idx) => {
+      const p = talepPuani(is, atanan, talepSayisi, agirlik);
+      if (p > enIyi) { enIyi = p; secilen = idx; }
+    });
+    const is = bekleyen.splice(secilen, 1)[0];
+
+    const aB = busyOf(is.from), bB = busyOf(is.to), sure = is.duration;
+
+    const adaylar = new Set([startM]);
+    [...aB, ...bB].forEach(iv => adaylar.add(iv.end));
+    masaBusy.forEach(l => l.forEach(iv => adaylar.add(iv.end)));
+    const sirali = [...adaylar].filter(t => t >= startM).sort((x, y) => x - y);
+
+    let ok = false;
+    for (const bas of sirali) {
+      const bit = bas + sure;
+      if (bit > endM) break;
+      if (!isFree(aB, bas, bit) || !isFree(bB, bas, bit)) continue;
+      const uygun = tables.filter(t => isFree(masaBusy.get(t.id), bas, bit))
+        .sort((x, y) => masaBusy.get(x.id).length - masaBusy.get(y.id).length);
+      if (!uygun.length) continue;
+      const masa = uygun[0];
+      scheduled.push({ id: is.id, from: is.from, to: is.to, duration: sure, mutual: is.mutual,
+                       tableId: masa.id, tableTitle: masa.title, start: bas, end: bit });
+      aB.push({ start: bas, end: bit }); bB.push({ start: bas, end: bit });
+      masaBusy.get(masa.id).push({ start: bas, end: bit });
+      atanan[upper(is.from)] = (atanan[upper(is.from)] || 0) + 1;
+      atanan[upper(is.to)] = (atanan[upper(is.to)] || 0) + 1;
+      ok = true; break;
+    }
+    if (!ok) unscheduled.push({ ...is, reason: 'Etkinlik saatleri içinde uygun boşluk yok' });
+  }
+  return { scheduled, unscheduled };
+}
+
+/* Sıfırdan tam program oluşturur — masa/sayaç durumlarını da
+   sıfırlar. "PROGRAMI OLUŞTUR" düğmesiyle elle tetiklenir. */
+function buildSchedule() {
+  const startM = parseClock(state.startTime) ?? 540;
+  const endM = parseClock(state.endTime) ?? 1080;
+  const tables = state.tables;
+  const agirlik = state.weights || defaultState().weights;
+  const bekleyen = mergeRequests(state.requests);
+
+  const talepSayisi = {};
+  bekleyen.forEach(is => { const k = upper(is.from); talepSayisi[k] = (talepSayisi[k] || 0) + 1; });
+
+  const firmaBusy = new Map();
+  const masaBusy = new Map();
+  const atanan = {};
+  tables.forEach(t => masaBusy.set(t.id, []));
+
+  const { scheduled, unscheduled } = isleriYerlestir(bekleyen, tables, firmaBusy, masaBusy, atanan, talepSayisi, agirlik, startM, endM);
+
+  scheduled.sort((a, b) => a.start - b.start || String(a.tableTitle).localeCompare(String(b.tableTitle), 'tr'));
+  state.schedule = scheduled;
+  state.unscheduled = unscheduled;
+  state.live = {};
+  state.tables.forEach(t => { state.live[t.id] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false }; });
+  saveState();
+}
+
+/* Otomatik senkronizasyondan yeni talep geldiğinde çağrılır.
+   Zaten programlanmış görüşmelere ve çalışan sayaçlara DOKUNMAZ;
+   yalnızca henüz yerleştirilmemiş talepleri mevcut takvimlerin
+   üzerine, boş kalan zamanlara ekler. */
+function otomatikProgramGuncelle() {
+  if (!state.requests.length) return false;
+  const startM = parseClock(state.startTime) ?? 540;
+  const endM = parseClock(state.endTime) ?? 1080;
+  const tables = state.tables;
+  const agirlik = state.weights || defaultState().weights;
+
+  const tumIsler = mergeRequests(state.requests);
+  const talepSayisi = {};
+  tumIsler.forEach(is => { const k = upper(is.from); talepSayisi[k] = (talepSayisi[k] || 0) + 1; });
+
+  // Zaten programlanmış çiftleri (firma A ↔ firma B) hariç tut.
+  const mevcutCiftler = new Set(state.schedule.map(s => pairKey(s.from, s.to)));
+  const yeniIsler = tumIsler.filter(is => !mevcutCiftler.has(pairKey(is.from, is.to)));
+  if (!yeniIsler.length) return false;
+
+  // Takvimleri MEVCUT programdan kur — sıfırdan değil. Böylece
+  // çalışan/geçmiş görüşmeler aynen korunur.
+  const firmaBusy = new Map();
+  const masaBusy = new Map();
+  const atanan = {};
+  tables.forEach(t => masaBusy.set(t.id, []));
+  state.schedule.forEach(s => {
+    const iv = { start: s.start, end: s.end };
+    if (masaBusy.has(s.tableId)) masaBusy.get(s.tableId).push(iv);
+    const af = upper(s.from), at = upper(s.to);
+    if (!firmaBusy.has(af)) firmaBusy.set(af, []);
+    if (!firmaBusy.has(at)) firmaBusy.set(at, []);
+    firmaBusy.get(af).push(iv);
+    firmaBusy.get(at).push(iv);
+    atanan[af] = (atanan[af] || 0) + 1;
+    atanan[at] = (atanan[at] || 0) + 1;
+  });
+
+  const { scheduled: yeniScheduled, unscheduled: yeniUnscheduled } =
+    isleriYerlestir(yeniIsler, tables, firmaBusy, masaBusy, atanan, talepSayisi, agirlik, startM, endM);
+
+  if (yeniScheduled.length) {
+    state.schedule = [...state.schedule, ...yeniScheduled]
+      .sort((a, b) => a.start - b.start || String(a.tableTitle).localeCompare(String(b.tableTitle), 'tr'));
+  }
+  state.unscheduled = yeniUnscheduled;
+
+  // Yeni eklenen masalar için sayaç kaydı aç; mevcutlara dokunma.
+  state.tables.forEach(t => {
+    if (!state.live[t.id]) state.live[t.id] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false };
+  });
+
+  saveState();
+  return yeniScheduled.length > 0;
+}
+
+function tableMeetings(tableId) { return state.schedule.filter(s => s.tableId === tableId); }
+function liveOf(tableId) {
+  if (!state.live[tableId]) state.live[tableId] = { index: 0, running: false, secondsLeft: 0, warned: false, ended: false };
+  return state.live[tableId];
+}
+function currentMeeting(tableId) { return tableMeetings(tableId)[liveOf(tableId).index] || null; }
+function nextMeeting(tableId) { return tableMeetings(tableId)[liveOf(tableId).index + 1] || null; }
+
+/* ---------- 3) SESLİ ANONS ---------- */
+
+function konus(metin) {
+  if (!sesAcik || !('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(metin);
+    u.lang = 'tr-TR'; u.rate = 0.95; u.volume = 1;
+    speechSynthesis.speak(u);
+  } catch (e) { /* ses yoksa sessizce geç */ }
+}
+
+function sesiAc() {
+  if (!('speechSynthesis' in window)) {
+    openModal({ title: 'Ses Desteklenmiyor', message: 'Bu tarayıcı sesli anonsu desteklemiyor. Chrome veya Edge kullanmayı deneyin.', alertOnly: true });
+    return;
+  }
+  sesAcik = true;
+  // Tarayıcılar ilk konuşmayı kullanıcı etkileşimine bağlar; burada tetikleniyor.
+  konus('Sesli anons etkinleştirildi.');
+  render();
+}
+
+/* ---------- 4) SAYAÇ VE ANONSLAR ---------- */
+
+function startTicking() {
+  if (tickTimer) return;
+  tickTimer = setInterval(() => {
+    let degisti = false;
+    state.tables.forEach(t => {
+      const L = liveOf(t.id);
+      if (!L.running) return;
+      L.secondsLeft -= 1;
+      degisti = true;
+
+      const m = currentMeeting(t.id);
+      if (!m) return;
+
+      if (!L.warned && L.secondsLeft <= 60 && L.secondsLeft > 0) {
+        L.warned = true;
+        konus(`${t.title}. ${m.from} ve ${m.to} firmaları, sürenizin dolmasına 1 dakika kalmıştır.`);
+      }
+      if (!L.ended && L.secondsLeft <= 0) {
+        L.ended = true;
+        L.running = false;
+        const n = nextMeeting(t.id);
+        let metin = `${t.title}. ${m.from} ve ${m.to} firmalarının görüşme süresi dolmuştur.`;
+        if (n) metin += ` Sırada ${n.from} ve ${n.to} firmaları var. Lütfen ${t.title} masasına geçiniz.`;
+        konus(metin);
+      }
+    });
+    if (degisti) { saveState(); refreshCounters(); }
+  }, 1000);
+}
+
+function baslat(tableId) {
+  const L = liveOf(tableId), m = currentMeeting(tableId);
+  if (!m) return;
+  if (L.secondsLeft <= 0 || L.ended) { L.secondsLeft = m.duration * 60; L.warned = false; L.ended = false; }
+  L.running = true;
+  saveState(); render();
+}
+function durdur(tableId) { liveOf(tableId).running = false; saveState(); render(); }
+function sifirla(tableId) {
+  const L = liveOf(tableId), m = currentMeeting(tableId);
+  L.secondsLeft = m ? m.duration * 60 : 0; L.warned = false; L.ended = false; L.running = false;
+  saveState(); render();
+}
+function sonraki(tableId) {
+  const L = liveOf(tableId), list = tableMeetings(tableId);
+  if (L.index >= list.length - 1) { L.index = list.length; L.running = false; L.secondsLeft = 0; saveState(); render(); return; }
+  L.index += 1;
+  const m = currentMeeting(tableId);
+  L.secondsLeft = m ? m.duration * 60 : 0;
+  L.warned = false; L.ended = false; L.running = false;
+  saveState(); render();
+}
+
+function renkOf(sec, running) {
+  if (sec <= 0) return 'var(--red)';
+  if (sec <= 60) return 'var(--yellow)';
+  return running ? 'var(--green)' : 'var(--gray)';
+}
+
+/* Sayaç yazılarını tam yeniden çizim yapmadan günceller. */
+function refreshCounters() {
+  state.tables.forEach(t => {
+    const L = liveOf(t.id);
+    const el = document.querySelector(`[data-timer="${t.id}"]`);
+    if (el) { el.textContent = fmtCounter(L.secondsLeft); el.style.color = renkOf(L.secondsLeft, L.running); }
+    const card = document.querySelector(`[data-card="${t.id}"]`);
+    if (card) {
+      card.classList.toggle('running', L.running && L.secondsLeft > 60);
+      card.classList.toggle('warn', L.running && L.secondsLeft <= 60 && L.secondsLeft > 0);
+      card.classList.toggle('over', L.secondsLeft <= 0 && L.ended);
+    }
+  });
+}
+
+/* ---------- 5) TALEP İÇE AKTARMA ---------- */
+
+/* Google Forms yanıt tablosundan yapıştırılan metni çözümler.
+   Beklenen sütunlar (sıra önemli değil, başlıktan bulunur):
+   zaman damgası | talep eden firma | görüşülecek firma | süre */
+/* Onay kutulu sorularda Google Forms birden çok seçimi tek hücrede
+   virgülle birleştirir ("TUSAŞ, BAYKAR"). Firma adlarının kendisi de
+   virgül içerebildiği için önce resmi listedeki adlar aranır; liste
+   yoksa virgül/noktalı virgülle bölünür. */
+function parseMultiFirms(cell) {
+  const ham = normalizeName(cell);
+  if (!ham) return [];
+
+  if ((state.firms || []).length) {
+    const metin = ' ' + firmaAnahtar(ham) + ' ';
+    const bulunan = [];
+    // Uzun adlar önce denenir ki kısa bir ad uzunun içinde eşleşmesin
+    [...state.firms].sort((a, b) => firmaAnahtar(b).length - firmaAnahtar(a).length).forEach(f => {
+      const k = firmaAnahtar(f);
+      if (!k) return;
+      if (metin.includes(' ' + k + ' ') && !bulunan.includes(f)) bulunan.push(f);
+    });
+    if (bulunan.length) return bulunan;
+  }
+
+  return ham.split(/\s*[;,]\s*/).map(normalizeName).filter(Boolean);
+}
+
+function parseRequestTable(text) {
+  const satirlar = String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  if (!satirlar.length) return { rows: [], error: 'Boş içerik' };
+
+  const bol = (s) => s.includes('\t') ? s.split('\t') : s.split(/\s*;\s*|\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+  const basliklar = bol(satirlar[0]).map(h => h.replace(/^"|"$/g, '').trim().toLocaleLowerCase('tr'));
+
+  const bul = (...anahtarlar) => basliklar.findIndex(h => anahtarlar.some(a => h.includes(a)));
+  let iFrom = bul('talep eden', 'firma adı', 'firmanız', 'kendi firma', 'talepte bulunan');
+  let iTo = bul('görüşmek', 'görüşülecek', 'talep edilen', 'hedef firma', 'karşı firma');
+  let iDur = bul('süre', 'dakika');
+  let iTime = bul('zaman damgası', 'timestamp', 'tarih');
+
+  const basliklıMi = iFrom >= 0 && iTo >= 0;
+  const veriSatirlari = basliklıMi ? satirlar.slice(1) : satirlar;
+  if (!basliklıMi) { iTime = 0; iFrom = 1; iTo = 2; iDur = 3; } // başlıksız: sabit sıra
+
+  const rows = [];
+  veriSatirlari.forEach((satir, i) => {
+    const h = bol(satir).map(v => v.replace(/^"|"$/g, '').trim());
+    const from = normalizeName(h[iFrom]);
+    const hedefler = parseMultiFirms(h[iTo]);
+    if (!from || !hedefler.length) return;
+    const sureHam = iDur >= 0 ? String(h[iDur] || '').match(/\d+/) : null;
+    const sure = sureHam ? Math.max(1, Number(sureHam[0])) : state.defaultDuration;
+    // Tek gönderimde birden çok firma seçilmişse her biri ayrı talep olur
+    hedefler.forEach(to => rows.push({
+      id: makeId('r'), from, to, duration: sure,
+      createdAt: iTime >= 0 ? String(h[iTime] || '') : '',
+      order: i
+    }));
+  });
+
+  return { rows, headerFound: basliklıMi };
+}
+
+/* ---------- OTOMATİK SENKRONİZASYON ----------
+   Yanıt tablosu, Apps Script'in JSONP uç noktasından düzenli
+   aralıklarla çekilir. Çapraz kaynak kısıtı nedeniyle fetch yerine
+   <script> etiketi enjeksiyonu kullanılır (klasik JSONP yöntemi). */
+let syncTimer = null;
+let syncCekimSurmekte = false;
+
+function sheetIdCoz(deger) {
+  const ham = String(deger || '').trim();
+  const m = ham.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return m ? m[1] : ham;   // zaten sade bir kimlikse olduğu gibi kullanılır
+}
+
+function senkronDurumMesaji(metin, hataMi) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.textContent = metin;
+  el.style.color = hataMi ? 'var(--red)' : 'var(--green)';
+}
+
+function senkronCek(sessiz) {
+  const adres = String(state.webAppUrl || '').trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(adres)) return;
+  if (syncCekimSurmekte) return;
+  syncCekimSurmekte = true;
+
+  const cbAdi = 'b2bSync_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const zamanAsimi = setTimeout(() => {
+    delete window[cbAdi];
+    betikEl.remove();
+    syncCekimSurmekte = false;
+    if (!sessiz) senkronDurumMesaji('Yanıt alınamadı (zaman aşımı)', true);
+  }, 12000);
+
+  window[cbAdi] = (yuk) => {
+    clearTimeout(zamanAsimi);
+    delete window[cbAdi];
+    betikEl.remove();
+    syncCekimSurmekte = false;
+
+    if (!yuk || yuk.error) {
+      if (!sessiz) senkronDurumMesaji('Tablo okunamadı: ' + (yuk?.error || 'bilinmeyen hata'), true);
+      return;
+    }
+    if (!yuk.headers?.length) {
+      senkronDurumMesaji('Henüz yanıt yok — bekleniyor…', false);
+      return;
+    }
+
+    const oncekiSayi = state.lastSyncCount || 0;
+    const yeniSatirlar = yuk.rows.slice(oncekiSayi);
+    state.lastSyncCount = yuk.rows.length;
+
+    if (!yeniSatirlar.length) {
+      senkronDurumMesaji(`Güncel — ${yuk.rows.length} yanıt (son kontrol ${new Date().toLocaleTimeString('tr-TR').slice(0,5)})`, false);
+      saveState();
+      return;
+    }
+
+    const kayitlar = parseSheetRows(yuk.headers, yeniSatirlar);
+    kayitlar.forEach(r => state.requests.push(r));
+    const yeniYerlesti = otomatikProgramGuncelle();
+    saveState(); render();
+    const ekBilgi = yeniYerlesti ? ' — masalara otomatik dağıtıldı' : '';
+    senkronDurumMesaji(`${kayitlar.length} yeni talep alındı${ekBilgi} (toplam ${yuk.rows.length} yanıt)`, false);
+  };
+
+  const parcalar = [adres + '?action=veri&callback=' + cbAdi];
+  const sid = sheetIdCoz(state.sheetId);
+  if (sid) parcalar.push('sheetId=' + encodeURIComponent(sid));
+  const betikEl = document.createElement('script');
+  betikEl.src = parcalar[0] + '&' + parcalar.slice(1).join('&');
+  betikEl.onerror = () => {
+    clearTimeout(zamanAsimi);
+    delete window[cbAdi];
+    betikEl.remove();
+    syncCekimSurmekte = false;
+    if (!sessiz) senkronDurumMesaji('Bağlantı kurulamadı', true);
+  };
+  document.body.appendChild(betikEl);
+}
+
+/* Tablo satırlarını (başlık + veri dizileri) taleplere çevirir.
+   parseRequestTable ile aynı sütun tanıma mantığını kullanır. */
+function parseSheetRows(headers, rows) {
+  const normBaslik = headers.map(h => String(h || '').toLocaleLowerCase('tr'));
+  const bul = (...anahtarlar) => normBaslik.findIndex(h => anahtarlar.some(a => h.includes(a)));
+  const iFrom = bul('talep eden', 'firma adı', 'firmanız', 'kendi firma', 'talepte bulunan');
+  const iTo = bul('görüşmek', 'görüşülecek', 'talep edilen', 'hedef firma', 'karşı firma');
+  const iDur = bul('süre', 'dakika');
+  const iTime = bul('zaman damgası', 'timestamp', 'tarih');
+  if (iFrom < 0 || iTo < 0) return [];
+
+  const sonuc = [];
+  rows.forEach((r) => {
+    const from = normalizeName(r[iFrom]);
+    const hedefler = parseMultiFirms(r[iTo]);
+    if (!from || !hedefler.length) return;
+    const sureHam = iDur >= 0 ? String(r[iDur] || '').match(/\d+/) : null;
+    const sure = sureHam ? Math.max(1, Number(sureHam[0])) : state.defaultDuration;
+    hedefler.forEach(to => sonuc.push({
+      id: makeId('r'), from, to, duration: sure,
+      createdAt: iTime >= 0 ? String(r[iTime] || '') : '',
+      order: state.requests.length + sonuc.length
+    }));
+  });
+  return sonuc;
+}
+
+function senkronBaslat() {
+  if (syncTimer) return;
+  senkronCek(true);
+  syncTimer = setInterval(() => senkronCek(true), 20000);
+}
+function senkronDurdur() {
+  if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+}
+
+function toggleAutoSync(acik) {
+  state.autoSync = !!acik;
+  saveState();
+  if (state.autoSync) { senkronBaslat(); senkronCek(false); }
+  else senkronDurdur();
+  render();
+}
+
+function applySheetId() {
+  const v = document.getElementById('setSheetId')?.value;
+  state.sheetId = sheetIdCoz(v);
+  saveState();
+}
+
+function importRequests() {
+  const kutu = document.getElementById('importBox');
+  const { rows, headerFound } = parseRequestTable(kutu?.value || '');
+  if (!rows.length) {
+    openModal({ title: 'İçe Aktarılamadı', message: 'Tabloda geçerli satır bulunamadı. En az "talep eden firma" ve "görüşülecek firma" sütunları olmalı.', alertOnly: true });
+    return;
+  }
+  const baslangic = state.requests.length;
+  rows.forEach((r, i) => { r.order = baslangic + i; state.requests.push(r); });
+  if (kutu) kutu.value = '';
+  saveState(); render();
+  openModal({
+    title: 'İçe Aktarıldı',
+    message: `${rows.length} talep eklendi.${headerFound ? '' : ' Başlık satırı bulunamadığı için sütunlar sırayla okundu (zaman, talep eden, görüşülecek, süre).'} Şimdi "PROGRAMI OLUŞTUR" ile masalara dağıtabilirsiniz.`,
+    alertOnly: true
+  });
+}
+
+function addManualRequest() {
+  const from = normalizeName(document.getElementById('mFrom')?.value);
+  const to = normalizeName(document.getElementById('mTo')?.value);
+  const dur = Math.max(1, Number(document.getElementById('mDur')?.value) || state.defaultDuration);
+  if (!from || !to) { openModal({ title: 'Eksik Bilgi', message: 'İki firma adı da girilmelidir.', alertOnly: true }); return; }
+  if (upper(from) === upper(to)) { openModal({ title: 'Geçersiz', message: 'Bir firma kendisiyle görüşme talebi oluşturamaz.', alertOnly: true }); return; }
+  state.requests.push({ id: makeId('r'), from, to, duration: dur, order: state.requests.length, createdAt: new Date().toISOString() });
+  ['mFrom', 'mTo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  saveState(); render();
+}
+
+function removeRequest(id) {
+  state.requests = state.requests.filter(r => r.id !== id);
+  saveState(); render();
+}
+
+function clearRequests() {
+  openModal({
+    title: 'Talepleri Temizle', message: 'Tüm görüşme talepleri silinsin mi? Program da sıfırlanır.',
+    confirmText: 'TEMİZLE', danger: true,
+    onConfirm: () => { state.requests = []; state.schedule = []; state.unscheduled = []; state.live = {}; saveState(); render(); }
+  });
+}
+
+/* ---------- 6) MASA YÖNETİMİ ---------- */
+
+function addTable() {
+  const pos = autoPosition(state.tables.length);
+  state.tables.push({ id: makeId('t'), title: `MASA ${state.tables.length + 1}`, ...pos });
+  saveState(); render();
+}
+function removeTable(id) {
+  if (state.tables.length <= 1) { openModal({ title: 'Silinemiyor', message: 'En az bir masa kalmalı.', alertOnly: true }); return; }
+  const t = state.tables.find(x => x.id === id);
+  const gorusmeSayisi = state.schedule.filter(s => s.tableId === id).length;
+  openModal({
+    title: 'Masayı Sil',
+    message: gorusmeSayisi
+      ? `${t?.title || 'Bu masa'} silinecek. Bu masaya atanmış ${gorusmeSayisi} görüşme programdan da kaldırılacak.`
+      : `${t?.title || 'Bu masa'} silinsin mi?`,
+    confirmText: 'SİL', danger: true,
+    onConfirm: () => {
+      state.tables = state.tables.filter(x => x.id !== id);
+      state.schedule = state.schedule.filter(s => s.tableId !== id);
+      delete state.live[id];
+      if (hallSelection && hallSelection.type === 'table' && hallSelection.id === id) hallSelection = null;
+      saveState(); render();
+    }
+  });
+}
+function renameTable(id, value) {
+  const t = state.tables.find(x => x.id === id);
+  if (t) { t.title = normalizeName(value) || t.title; saveState(); }
+}
+
+/* Salon planındaki tüm masaları ızgaraya göre yeniden dizer.
+   Elle sürüklenerek bozulan düzeni toplu olarak düzeltmek için. */
+function resetLayout() {
+  openModal({
+    title: 'Yerleşimi Sıfırla',
+    message: 'Masalar ızgaraya göre yeniden dizilsin mi? Görüşme programı ve sayaçlar etkilenmez.',
+    confirmText: 'SIFIRLA', danger: true,
+    onConfirm: () => {
+      state.tables.forEach((t, i) => Object.assign(t, autoPosition(i, t.w, t.h)));
+      saveState(); render();
+    }
+  });
+}
+
+function applySettings() {
+  const g = id => document.getElementById(id)?.value;
+  state.eventName = normalizeName(g('setName'));
+  state.formUrl = String(g('setForm') || '').trim();
+  state.webAppUrl = String(g('setWebApp') || '').trim();
+  if (/^\d{2}:\d{2}$/.test(String(g('setStart')))) state.startTime = g('setStart');
+  if (/^\d{2}:\d{2}$/.test(String(g('setEnd')))) state.endTime = g('setEnd');
+  state.defaultDuration = Math.max(1, Number(g('setDur')) || 15);
+  saveState(); render();
+}
+
+function generateSchedule() {
+  if (!state.requests.length) { openModal({ title: 'Talep Yok', message: 'Önce görüşme taleplerini içe aktarın veya elle ekleyin.', alertOnly: true }); return; }
+  buildSchedule();
+  render();
+  openModal({
+    title: 'Program Oluşturuldu',
+    message: `${state.schedule.length} görüşme masalara dağıtıldı.`,
+    alertOnly: true
+  });
+}
+
+/* ---------- 7) EKRAN ÇİZİMİ ---------- */
+
+function tableCardHtml(t, follow) {
+  const L = liveOf(t.id);
+  const m = currentMeeting(t.id);
+  const n = nextMeeting(t.id);
+  const list = tableMeetings(t.id);
+  const bitti = L.index >= list.length && list.length > 0;
+  const cls = L.running && L.secondsLeft > 60 ? 'running' : (L.running && L.secondsLeft > 0 ? 'warn' : (L.secondsLeft <= 0 && L.ended ? 'over' : ''));
+
+  const govde = !list.length
+    ? `<div class="tc-body"><div class="empty-note">Bu masaya görüşme atanmadı</div></div>`
+    : bitti
+      ? `<div class="tc-body"><div class="tc-label">Tamamlandı</div><div class="tc-pair">Bu masadaki tüm görüşmeler bitti</div></div>`
+      : `<div class="tc-body">
+           <div class="tc-label">Görüşen Firmalar</div>
+           <div class="tc-pair">${esc(m.from)}<br>↔<br>${esc(m.to)}</div>
+           <div class="tc-label">Kalan Süre</div>
+           <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
+           <div class="tc-next">
+             ${n ? `Sıradaki: <b>${esc(n.from)} ↔ ${esc(n.to)}</b> · ${fmtClock(n.start)}` : 'Bu masada son görüşme'}
+           </div>
+         </div>`;
+
+  const eylemler = follow || !list.length || bitti ? '' : `
+    <div class="tc-actions">
+      <button type="button" class="green" onclick="baslat('${t.id}')" ${L.running ? 'disabled' : ''}>▶ BAŞLAT</button>
+      <button type="button" class="red" onclick="durdur('${t.id}')" ${!L.running ? 'disabled' : ''}>⏸ DURDUR</button>
+      <button type="button" class="ghost small" onclick="sifirla('${t.id}')">↺ SÜREYİ SIFIRLA</button>
+      <button type="button" class="yellow small" onclick="sonraki('${t.id}')">▶▶ SIRADAKİ</button>
+    </div>`;
+
+  const ilerleme = list.length ? `${Math.min(L.index + 1, list.length)}/${list.length}` : '0';
+  return `
+    <div class="table-card ${cls}" data-card="${t.id}">
+      <div class="tc-head"><span>${esc(t.title)}</span><span class="status-pill">${ilerleme}</span></div>
+      ${govde}${eylemler}
+    </div>`;
+}
+
+/* ---------- SALON PLANI (sürükle-bırak yerleşim) ----------
+   Masalar, canlı durumlarını (sayaç, firma adları) koruyarak fiziksel
+   salon düzenine göre serbestçe konumlandırılabilir. Yalnızca kontrol
+   panelinde kullanılır; takip ekranı sade ızgarayı kullanmaya devam
+   eder. */
+function toggleLayoutView() {
+  layoutView = !layoutView;
+  if (!layoutView) { editMode = false; hallSelection = null; }
+  render();
+}
+
+function toggleEditMode() {
+  editMode = !editMode;
+  if (!editMode) hallSelection = null;
+  render();
+}
+
+function hallCardHtml(t) {
+  const L = liveOf(t.id);
+  const m = currentMeeting(t.id);
+  const list = tableMeetings(t.id);
+  const bitti = L.index >= list.length && list.length > 0;
+  const cls = L.running && L.secondsLeft > 60 ? 'running' : (L.running && L.secondsLeft > 0 ? 'warn' : (L.secondsLeft <= 0 && L.ended ? 'over' : ''));
+  const stil = `left:${t.x}%;top:${t.y}%;width:${t.w}%;height:${t.h}%;`;
+
+  const govde = !list.length
+    ? `<div class="tc-body"><div class="empty-note">Görüşme yok</div></div>`
+    : bitti
+      ? `<div class="tc-body"><div class="tc-label">Tamamlandı</div></div>`
+      : `<div class="tc-body">
+           <div class="tc-pair">${esc(m.from)}<br>↔<br>${esc(m.to)}</div>
+           <div class="tc-time" data-timer="${t.id}" style="color:${renkOf(L.secondsLeft, L.running)}">${fmtCounter(L.secondsLeft)}</div>
+         </div>`;
+
+  const eylemler = (editMode || !list.length || bitti) ? '' : `
+    <div class="tc-actions">
+      <button type="button" class="green" onclick="baslat('${t.id}')" ${L.running ? 'disabled' : ''}>▶</button>
+      <button type="button" class="red" onclick="durdur('${t.id}')" ${!L.running ? 'disabled' : ''}>⏸</button>
+      <button type="button" class="yellow" onclick="sonraki('${t.id}')">▶▶</button>
+    </div>`;
+
+  const secili = editMode && hallSelection && hallSelection.type === 'table' && hallSelection.id === t.id;
+  return `
+    <div class="hall-card table-card ${cls} ${editMode ? 'draggable' : ''} ${secili ? 'selected' : ''}" data-card="${t.id}" data-hall-id="${t.id}" style="${stil}">
+      <div class="tc-head">${esc(t.title)}</div>
+      ${govde}${eylemler}
+    </div>`;
+}
+
+function shapeIcon(kind) {
+  return kind === 'circle' ? '◯' : kind === 'note' ? '✎' : '▭';
+}
+
+function shapeHtml(sh) {
+  const stil = `left:${sh.x}%;top:${sh.y}%;width:${sh.w}%;height:${sh.h}%;`;
+  const secili = editMode && hallSelection && hallSelection.type === 'shape' && hallSelection.id === sh.id;
+  return `
+    <div class="hall-shape ${sh.kind} ${editMode ? 'draggable' : ''} ${secili ? 'selected' : ''}" data-shape-id="${sh.id}" style="${stil}">
+      <span class="hall-shape-label">${esc(sh.label)}</span>
+    </div>`;
+}
+
+/* Salon planına dikdörtgen/daire/not şeklinde dekoratif bir öğe
+   ekler (sahne, giriş, bekleme alanı vb. işaretlemek için). Bu
+   öğeler görüşme eşleştirmesini hiçbir şekilde etkilemez. */
+function addShape(kind) {
+  const varsayilan = kind === 'circle' ? 'ALAN' : kind === 'note' ? 'NOT' : 'SAHNE';
+  openModal({
+    title: kind === 'circle' ? 'Daire Ekle' : kind === 'note' ? 'Not Ekle' : 'Dikdörtgen Ekle',
+    message: 'Üzerinde görünecek kısa metni girin:',
+    showInput: true, inputValue: varsayilan, confirmText: 'EKLE',
+    onConfirm: (deger) => {
+      const etiket = normalizeName(deger) || varsayilan;
+      const sayi = state.shapes.length;
+      const boyut = kind === 'circle' ? { w: 12, h: 14 } : kind === 'note' ? { w: 16, h: 9 } : { w: 20, h: 12 };
+      state.shapes.push({
+        id: makeId('sh'), kind, label: etiket,
+        x: 6 + (sayi % 4) * 22, y: 74 + Math.floor(sayi / 4) * 16,
+        ...boyut
+      });
+      saveState(); render();
+    }
+  });
+}
+
+function removeShape(id) {
+  state.shapes = state.shapes.filter(s => s.id !== id);
+  saveState(); render();
+}
+
+function renderHallCanvas() {
+  return `
+    <div class="hall-canvas" id="hallCanvas">
+      ${state.shapes.map(shapeHtml).join('')}
+      ${state.tables.map(hallCardHtml).join('')}
+    </div>`;
+}
+
+/* Fare/dokunma ile sürükleyerek masa/şekil konumunu değiştirir.
+   Konumlar %2'lik adımlarla ızgaraya yapışır ve tuval sınırları
+   içinde tutulur. Masalar ve şekiller aynı sürükleme mantığını
+   paylaşır; hangi diziye ait olduğu veri kümesi ile belirlenir. */
+function bindHallDragging() {
+  const canvas = document.getElementById('hallCanvas');
+  if (!canvas || !editMode) return;
+
+  const surukleBagla = (el, veri, tur) => {
+    el.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault();
+      const canvasRect = canvas.getBoundingClientRect();
+      const basY = ev.clientY, basX = ev.clientX;
+      const oncekiX = veri.x, oncekiY = veri.y;
+      el.setPointerCapture(ev.pointerId);
+      el.classList.add('taken');
+
+      const hareket = (mv) => {
+        const dx = ((mv.clientX - basX) / canvasRect.width) * 100;
+        const dy = ((mv.clientY - basY) / canvasRect.height) * 100;
+        let nx = oncekiX + dx, ny = oncekiY + dy;
+        nx = Math.round(nx / 2) * 2; ny = Math.round(ny / 2) * 2;
+        nx = Math.max(0, Math.min(100 - veri.w, nx));
+        ny = Math.max(0, Math.min(100 - veri.h, ny));
+        veri.x = nx; veri.y = ny;
+        el.style.left = nx + '%'; el.style.top = ny + '%';
+      };
+      const birak = (up) => {
+        el.classList.remove('taken');
+        el.removeEventListener('pointermove', hareket);
+        el.removeEventListener('pointerup', birak);
+        // Sürükleme ile tıklama, bırakılan noktanın başlangıca olan
+        // GERÇEK uzaklığıyla ayırt edilir (ara titremeler değil).
+        // Eşik, gerçek fare/trackpad kullanımına toleranslı olacak
+        // şekilde geniş tutulur (8px).
+        const uzaklik = Math.hypot(up.clientX - basX, up.clientY - basY);
+        if (uzaklik > 8) {
+          saveState();
+        } else {
+          veri.x = oncekiX; veri.y = oncekiY;   // ufak titremeyi geri al
+          hallSelection = { type: tur, id: veri.id };
+          render();
+        }
+      };
+      el.addEventListener('pointermove', hareket);
+      el.addEventListener('pointerup', birak);
+    });
+  };
+
+  canvas.querySelectorAll('.hall-card').forEach((el) => {
+    const t = state.tables.find(x => x.id === el.dataset.hallId);
+    if (t) surukleBagla(el, t, 'table');
+  });
+  canvas.querySelectorAll('.hall-shape').forEach((el) => {
+    const sh = state.shapes.find(x => x.id === el.dataset.shapeId);
+    if (sh) surukleBagla(el, sh, 'shape');
+  });
+
+  // Tuvalin boş bir noktasına tıklanırsa seçim kaldırılır.
+  canvas.addEventListener('pointerdown', (ev) => {
+    if (ev.target === canvas && hallSelection) { hallSelection = null; render(); }
+  });
+}
+
+function deleteSelectedHallItem() {
+  if (!hallSelection) return;
+  if (hallSelection.type === 'table') {
+    removeTable(hallSelection.id);   // onay penceresi kendi içinde hallSelection'ı temizler
+  } else {
+    const id = hallSelection.id;
+    hallSelection = null;
+    removeShape(id);
+  }
+}
+
+function scheduleTableHtml() {
+  if (!state.schedule.length) return `<div class="empty-note">Henüz program oluşturulmadı</div>`;
+  const satirlar = state.schedule.map(s => {
+    const L = liveOf(s.tableId);
+    const list = tableMeetings(s.tableId);
+    const idx = list.findIndex(x => x === s);
+    const durum = idx < L.index ? 'done' : (idx === L.index ? 'now' : '');
+    return `<tr class="${durum}">
+      <td class="clock">${fmtClock(s.start)}–${fmtClock(s.end)}</td>
+      <td>${esc(s.tableTitle)}</td>
+      <td class="pair">${esc(s.from)} ↔ ${esc(s.to)}${s.mutual ? '<span class="badge">karşılıklı</span>' : ''}</td>
+      <td>${s.duration} dk</td>
+    </tr>`;
+  }).join('');
+  return `<div class="sched"><table>
+    <thead><tr><th>Saat</th><th>Masa</th><th>Firmalar</th><th>Süre</th></tr></thead>
+    <tbody>${satirlar}</tbody></table></div>`;
+}
+
+function requestListHtml() {
+  if (!state.requests.length) return `<div class="empty-note">Henüz talep yok</div>`;
+  const satirlar = state.requests.map((r, i) => `<tr>
+    <td class="clock">${i + 1}</td>
+    <td class="pair">${esc(r.from)} → ${esc(r.to)}</td>
+    <td>${r.duration} dk</td>
+    <td style="text-align:right"><button type="button" class="small red" onclick="removeRequest('${r.id}')">×</button></td>
+  </tr>`).join('');
+  return `<div class="sched" style="max-height:300px"><table>
+    <thead><tr><th>#</th><th>Talep</th><th>Süre</th><th></th></tr></thead>
+    <tbody>${satirlar}</tbody></table></div>`;
+}
+
+function renderControl() {
+  document.body.style.overflow = '';
+  const firmalar = new Set();
+  state.requests.forEach(r => { firmalar.add(upper(r.from)); firmalar.add(upper(r.to)); });
+  const bilinmeyen = state.firms.length ? taninmayanAdlar() : [];
+
+  document.getElementById('app').innerHTML = `
+    <main class="shell">
+      <section class="topbar">
+        <h1>${esc(state.eventName || 'B2B Görüşme Eşleştirme Sistemi')}</h1>
+        <div class="top-actions">
+          ${sesAcik ? '' : `<button type="button" class="yellow" onclick="sesiAc()">🔊 SESLİ ANONSU AÇ</button>`}
+          <button type="button" onclick="openFollow()">TAKİP EKRANI</button>
+          <button type="button" class="secondary" onclick="openQr()">QR KODU</button>
+          <button type="button" class="secondary" onclick="openShare()">PAYLAŞ / KAYDET</button>
+        </div>
+      </section>
+
+      ${sesAcik ? '' : `<div class="audio-bar">⚠ Sesli anonslar kapalı. Etkinlik başlamadan önce "SESLİ ANONSU AÇ" düğmesine basın — tarayıcılar sesi ancak bir tıklamadan sonra çalabilir.</div>`}
+
+      <div class="stat-row">
+        <div class="stat"><div class="k">Firma</div><div class="v">${firmalar.size}</div></div>
+        <div class="stat"><div class="k">Talep</div><div class="v">${state.requests.length}</div></div>
+        <div class="stat"><div class="k">Görüşme</div><div class="v">${state.schedule.length}</div></div>
+        <div class="stat"><div class="k">Masa</div><div class="v">${state.tables.length}</div></div>
+      </div>
+
+      <div class="main-layout">
+        <div style="display:grid;gap:14px;min-width:0">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Masalar</h2>
+              <div class="row" style="gap:6px">
+                ${layoutView ? `
+                  <button type="button" class="secondary small" onclick="addTable()">+ MASA</button>
+                  <button type="button" class="secondary small" onclick="resetLayout()">↺ SIFIRLA</button>
+                  <button type="button" class="${editMode ? 'green' : 'secondary'} small" onclick="toggleEditMode()">${editMode ? '✔ BİTTİ' : '✎ DÜZENLE'}</button>
+                ` : ''}
+                <button type="button" class="secondary small" onclick="toggleLayoutView()">${layoutView ? '≡ LİSTE' : '🗺 SALON PLANI'}</button>
+                <span class="hint" style="font-size:11px">${state.startTime} – ${state.endTime}</span>
+              </div>
+            </div>
+            ${layoutView && editMode ? `
+              <div class="row" style="padding:8px 12px;border-bottom:1px solid var(--border-soft);background:var(--card-alt)">
+                <span class="hint" style="font-size:11px;font-weight:600">Şekil ekle:</span>
+                <button type="button" class="secondary small" onclick="addShape('rect')">▭ Dikdörtgen</button>
+                <button type="button" class="secondary small" onclick="addShape('circle')">◯ Daire</button>
+                <button type="button" class="secondary small" onclick="addShape('note')">✎ Not</button>
+                <span style="flex:1"></span>
+                <button type="button" class="red small" onclick="deleteSelectedHallItem()" ${hallSelection ? '' : 'disabled'}>🗑 SEÇİLENİ SİL</button>
+              </div>
+              <div class="hint" style="padding:0 12px 8px;font-size:11px">
+                ${hallSelection ? `Seçili: ${hallSelection.type === 'table' ? (state.tables.find(x => x.id === hallSelection.id)?.title || '') : (state.shapes.find(x => x.id === hallSelection.id)?.label || '')}` : 'Silmek için bir masaya veya şekle tıklayın.'}
+              </div>
+            ` : ''}
+            <div class="panel-body">
+              ${layoutView ? renderHallCanvas() : `<div class="tables-grid">${state.tables.map(t => tableCardHtml(t, false)).join('')}</div>`}
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Görüşme Programı</h2><span>${state.schedule.length} görüşme</span></div>
+            <div class="panel-body">
+              ${scheduleTableHtml()}
+            </div>
+          </section>
+        </div>
+
+        <div style="display:grid;gap:14px;min-width:0">
+          <section class="panel">
+            <div class="panel-header"><h2>Katılımcı Firmalar</h2><span>${state.firms.length}</span></div>
+            <div class="panel-body">
+              ${state.firms.length ? '' : `<p class="hint">Etkinliğe katılacak firmaları buraya ekleyin. Sonra bu listeyi kopyalayıp Google Form'daki açılır listelere yapıştırın — böylece katılımcılar yazmak yerine seçer ve yazım hatası olmaz.</p>`}
+              <details class="collapsible" ${state.firms.length ? '' : 'open'}>
+                <summary>Firma listesi ekle</summary>
+                <div class="collapsible-body">
+                  <textarea id="firmBox" placeholder="Her satıra bir firma:&#10;ONS MAKİNA&#10;TUSAŞ&#10;BAYKAR"></textarea>
+                  <div class="row"><button type="button" onclick="firmaEkleToplu()">LİSTEYE EKLE</button></div>
+                </div>
+              </details>
+              ${state.firms.length ? `
+                <div class="firm-list">${state.firms.map(f => `<span class="firm-chip">${esc(f)}<button type="button" onclick="firmaSil('${esc(f).replace(/'/g, "\\'")}')">×</button></span>`).join('')}</div>
+                <div class="row">
+                  <button type="button" class="green" style="flex:1" onclick="formuOtomatikOlustur()">⚡ FORM OLUŞTUR</button>
+                  <button type="button" class="secondary small" onclick="firmaListesiniKopyala()">Listeyi kopyala</button>
+                  <button type="button" class="ghost small" onclick="firmaListesiniTemizle()">Temizle</button>
+                </div>` : ''}
+
+              <div class="row" style="border-top:1px solid var(--border-soft);padding-top:10px;margin-top:2px">
+                <button type="button" class="${state.webAppUrl ? 'secondary' : 'yellow'} small" onclick="webAppKurulum()">
+                  ${state.webAppUrl ? '⚙ Form oluşturucu ayarı' : '⚙ TEK TIK KURULUMU'}
+                </button>
+                <button type="button" class="secondary small" onclick="formBetigiGoster()">Betiği elle çalıştır</button>
+                ${state.webAppUrl ? '<span class="hint" style="font-size:11px;color:var(--green);font-weight:600">✓ kurulu</span>' : ''}
+              </div>
+            </div>
+          </section>
+
+          ${bilinmeyen.length ? `
+          <section class="panel" style="border-color:var(--yellow)">
+            <div class="panel-header" style="background:rgba(181,121,14,.12)"><h2>⚠ Listede Olmayan Adlar</h2><span>${bilinmeyen.length}</span></div>
+            <div class="panel-body">
+              <p class="hint">Bu adlar katılımcı firma listesinde yok. Aynı firmanın farklı yazımı olabilir — eşleştirin ya da listeye ekleyin. Aksi halde ayrı firma sayılır ve çakışma kontrolü hatalı olur.</p>
+              ${bilinmeyen.map(b => `
+                <div class="unknown-row">
+                  <div><b>${esc(b.ad)}</b> <span class="hint" style="font-size:11px">(${b.sayi} talep)</span></div>
+                  <div class="row">
+                    ${b.oneri ? `<button type="button" class="green small" onclick="adiEsle('${esc(b.ad).replace(/'/g, "\\'")}','${esc(b.oneri.firma).replace(/'/g, "\\'")}')">→ ${esc(b.oneri.firma)}</button>` : ''}
+                    <select onchange="if(this.value)adiEsle('${esc(b.ad).replace(/'/g, "\\'")}',this.value)">
+                      <option value="">Başka firmaya eşle…</option>
+                      ${state.firms.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('')}
+                    </select>
+                    <button type="button" class="secondary small" onclick="adiFirmaYap('${esc(b.ad).replace(/'/g, "\\'")}')">YENİ FİRMA</button>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </section>` : ''}
+
+          <section class="panel">
+            <div class="panel-header"><h2>Talepler</h2><span>${state.requests.length}</span></div>
+            <div class="panel-body">
+              ${state.webAppUrl ? `
+                <div class="sync-box ${state.autoSync ? 'on' : ''}">
+                  <label class="sync-toggle">
+                    <input type="checkbox" ${state.autoSync ? 'checked' : ''} onchange="toggleAutoSync(this.checked)">
+                    <span>Otomatik senkronizasyon — talep girildiğinde otomatik alınsın</span>
+                  </label>
+                  ${state.autoSync ? `
+                    <p class="hint" id="syncStatus">Bekleniyor…</p>
+                    <details class="collapsible"><summary>Yanıt tablosu belirt (isteğe bağlı)</summary><div class="collapsible-body">
+                      <p class="hint">Boş bırakılırsa en son oluşturulan form kullanılır. Birden fazla form oluşturduysanız hangisinin yanıtları izlensin, tablonun adresini buraya yapıştırın.</p>
+                      <input id="setSheetId" type="text" value="${esc(state.sheetId)}" placeholder="Yanıt tablosu adresi veya kimliği" onchange="applySheetId()">
+                    </div></details>
+                  ` : ''}
+                </div>
+              ` : `<p class="hint">Otomatik senkronizasyon için önce "⚙ Tek tık kurulumu"nu tamamlayın.</p>`}
+
+              <details class="collapsible" ${state.requests.length || state.autoSync ? '' : 'open'}>
+                <summary>Google Forms tablosundan elle aktar</summary>
+                <div class="collapsible-body">
+                  <p class="hint">Form yanıtları tablosunu Google Sheets'te seçip kopyalayın, buraya yapıştırın. Başlık satırını da dahil edin.</p>
+                  <textarea id="importBox" placeholder="Zaman damgası&#9;Talep eden firma&#9;Görüşülecek firma&#9;Süre&#10;10.06.2026 09:12&#9;ONS MAKİNA&#9;TUSAŞ&#9;20"></textarea>
+                  <div class="row"><button type="button" onclick="importRequests()">TABLOYU AKTAR</button></div>
+                </div>
+              </details>
+
+              <details class="collapsible">
+                <summary>Elle talep ekle</summary>
+                <div class="collapsible-body">
+                  <div class="grid2">
+                    <div><label for="mFrom">Talep eden</label><input id="mFrom" type="text" autocomplete="off"></div>
+                    <div><label for="mTo">Görüşülecek</label><input id="mTo" type="text" autocomplete="off"></div>
+                  </div>
+                  <div class="grid2">
+                    <div><label for="mDur">Süre (dk)</label><input id="mDur" type="number" min="1" value="${state.defaultDuration}"></div>
+                    <div style="display:flex;align-items:flex-end"><button type="button" class="secondary" style="width:100%" onclick="addManualRequest()">EKLE</button></div>
+                  </div>
+                </div>
+              </details>
+
+              ${requestListHtml()}
+              <div class="row">
+                <button type="button" class="green" style="flex:1" onclick="generateSchedule()">⚙ PROGRAMI OLUŞTUR</button>
+                <button type="button" class="ghost" onclick="clearRequests()">TEMİZLE</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Ayarlar</h2></div>
+            <div class="panel-body">
+              <div><label for="setName">Etkinlik adı</label><input id="setName" type="text" value="${esc(state.eventName)}" autocomplete="off"></div>
+              <div class="grid2">
+                <div><label for="setStart">Başlangıç</label><input id="setStart" type="time" value="${esc(state.startTime)}"></div>
+                <div><label for="setEnd">Bitiş</label><input id="setEnd" type="time" value="${esc(state.endTime)}"></div>
+              </div>
+              <div><label for="setDur">Varsayılan görüşme süresi (dk)</label><input id="setDur" type="number" min="1" value="${state.defaultDuration}"></div>
+              <div><label for="setForm">Google Form adresi</label><input id="setForm" type="url" value="${esc(state.formUrl)}" placeholder="https://forms.gle/..."></div>
+              <div><label for="setWebApp">Form oluşturucu adresi (tek tık)</label><input id="setWebApp" type="url" value="${esc(state.webAppUrl)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+              <button type="button" class="secondary" onclick="applySettings()">AYARLARI KAYDET</button>
+
+              <div class="section-label">QR Görseli</div>
+              ${state.qrImage
+                ? `<div class="qr-preview"><img src="${state.qrImage}" alt="Yüklenen QR"><div class="row">
+                     <button type="button" class="secondary small" onclick="qrGorseliYukle()">DEĞİŞTİR</button>
+                     <button type="button" class="red small" onclick="qrGorseliSil()">KALDIR</button>
+                   </div></div>`
+                : `<p class="hint">QR kodunuzu bir kez üretip (örn. qr-code-generator.com) görselini buraya yükleyin. Böylece internet olmadan da görüntülenir.</p>
+                   <button type="button" class="secondary" onclick="qrGorseliYukle()">⬆ QR GÖRSELİ YÜKLE</button>`}
+
+              <div class="section-label">Masalar</div>
+              ${state.tables.map(t => `<div class="row">
+                <input type="text" value="${esc(t.title)}" style="flex:1" onchange="renameTable('${t.id}', this.value)">
+                <button type="button" class="small red" onclick="removeTable('${t.id}')">×</button>
+              </div>`).join('')}
+              <button type="button" class="secondary" onclick="addTable()">+ MASA EKLE</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>`;
+  startTicking();
+  if (layoutView) bindHallDragging();
+}
+
+function renderFollow() {
+  document.body.style.overflow = 'auto';
+  const bitmis = state.schedule.filter(s => {
+    const L = liveOf(s.tableId); const list = tableMeetings(s.tableId);
+    return list.indexOf(s) < L.index;
+  }).length;
+  document.getElementById('app').innerHTML = `
+    <main class="follow-screen">
+      <section class="topbar">
+        <h1>${esc(state.eventName || 'B2B Görüşme Programı')}</h1>
+        <div class="row" style="flex:0 0 auto;align-items:center">
+          <div class="follow-progress">Tamamlanan: ${bitmis} / ${state.schedule.length}</div>
+          <button type="button" class="secondary small" onclick="closeFollow()">← KONTROL PANELİ</button>
+        </div>
+      </section>
+      <div class="tables-grid">${state.tables.map(t => tableCardHtml(t, true)).join('')}</div>
+    </main>`;
+  startTicking();
+  startPolling();
+}
+
+/* QR ekranı: yüklenmiş sabit görsel varsa o gösterilir (internet
+   gerektirmez). Yoksa form adresinden çevrimiçi üretilmeye çalışılır. */
+function renderQr() {
+  document.body.style.overflow = '';
+  const gorsel = state.qrImage;
+  const url = state.formUrl;
+  const cevrimici = !gorsel && url
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=12&data=${encodeURIComponent(url)}`
+    : '';
+
+  let icerik;
+  if (gorsel) {
+    icerik = `<div class="qr-box"><img src="${gorsel}" alt="Görüşme talep formu QR kodu"></div>`;
+  } else if (cevrimici) {
+    icerik = `<div class="qr-box" id="qrBox"><img src="${esc(cevrimici)}" alt="Form QR kodu" onerror="qrHata()"></div>`;
+  } else {
+    icerik = `<p class="hint" style="font-size:15px;max-width:520px">Henüz QR görseli yüklenmedi.<br>Kontrol panelindeki <b>Ayarlar → QR Görseli</b> bölümünden yükleyebilirsiniz.</p>`;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <main class="shell">
+      <section class="topbar">
+        <h1>${esc(state.eventName || 'Görüşme Talep Formu')}</h1>
+        <button type="button" class="secondary" onclick="closeQr()">← KONTROL PANELİ</button>
+      </section>
+      <section class="panel"><div class="qr-wrap">
+        ${(gorsel || cevrimici) ? `<p class="hint" style="font-size:18px;max-width:600px">Görüşmek istediğiniz firmaları bildirmek için telefonunuzun kamerasıyla okutun.</p>` : ''}
+        ${icerik}
+        ${url ? `<div class="qr-link" id="qrLink">${esc(url)}</div>
+                 <button type="button" class="secondary" onclick="kopyala('${esc(url)}')">ADRESİ KOPYALA</button>` : ''}
+      </div></section>
+    </main>`;
+}
+
+function qrHata() {
+  const k = document.getElementById('qrBox');
+  if (k) k.innerHTML = '<p class="hint" style="padding:20px;max-width:420px">QR görüntüsü çevrimiçi üretilemedi (internet yok).<br>Ayarlar bölümünden sabit bir QR görseli yükleyin.</p>';
+  const l = document.getElementById('qrLink');
+  if (l) { l.style.fontSize = '17px'; l.style.fontWeight = '700'; l.style.color = 'var(--blue)'; }
+}
+
+/* QR görselini dosyadan yükler ve veri olarak saklar; böylece
+   kaydedilen HTML dosyasının içine de gömülür. */
+function qrGorseliYukle() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/png,image/jpeg,image/svg+xml,image/webp';
+  inp.onchange = () => {
+    const f = inp.files?.[0];
+    if (!f) return;
+    if (f.size > 3 * 1024 * 1024) {
+      openModal({ title: 'Dosya Çok Büyük', message: 'QR görseli 3 MB\'tan küçük olmalı. Daha küçük bir görsel kullanın.', alertOnly: true });
+      return;
+    }
+    const rd = new FileReader();
+    rd.onload = () => {
+      state.qrImage = String(rd.result);
+      saveState(); render();
+    };
+    rd.onerror = () => openModal({ title: 'Okunamadı', message: 'Görsel okunamadı.', alertOnly: true });
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+function qrGorseliSil() {
+  openModal({
+    title: 'QR Görselini Kaldır', message: 'Yüklenen QR görseli silinsin mi?',
+    confirmText: 'KALDIR', danger: true,
+    onConfirm: () => { state.qrImage = ''; saveState(); render(); }
+  });
+}
+
+function kopyala(metin) {
+  const bildir = ok => openModal({ title: ok ? 'Kopyalandı' : 'Kopyalanamadı', message: ok ? 'Adres panoya kopyalandı.' : 'Tarayıcı izin vermedi; adresi elle seçip kopyalayın.', alertOnly: true });
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(metin).then(() => bildir(true)).catch(() => bildir(false));
+  } else bildir(false);
+}
+
+function render() {
+  if (route === 'takip') renderFollow();
+  else if (route === 'qr') renderQr();
+  else renderControl();
+}
+
+/* ---------- 8) EKRANLAR ARASI GEÇİŞ ---------- */
+
+function openFollow() {
+  const url = `${location.href.split('#')[0]}#takip`;
+  let p = null;
+  try { p = window.open(url, '_blank'); } catch (e) { p = null; }
+  if (p && !p.closed) return;
+  openModal({
+    title: 'Takip Ekranı', message: 'Tarayıcı yeni sekme açmayı engelledi. Bu sekmede açılsın mı?',
+    confirmText: 'BU SEKMEDE AÇ',
+    onConfirm: () => { location.hash = '#takip'; applyRoute(); }
+  });
+}
+function closeFollow() { location.hash = ''; applyRoute(); }
+function openQr() { location.hash = '#qr'; applyRoute(); }
+function closeQr() { location.hash = ''; applyRoute(); }
+
+function applyRoute() {
+  const h = (location.hash || '').toLowerCase();
+  route = h === '#takip' ? 'takip' : (h === '#qr' ? 'qr' : 'kontrol');
+  if (route !== 'takip') stopPolling();
+  state = loadState();
+  if (route === 'kontrol' && state.autoSync) senkronBaslat();
+  else senkronDurdur();
+  render();
+}
+
+/* Takip ekranı, kontrol panelindeki değişiklikleri yansıtır. */
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(() => {
+    const yeni = loadState();
+    if (JSON.stringify(yeni.schedule) !== JSON.stringify(state.schedule) ||
+        JSON.stringify(yeni.tables) !== JSON.stringify(state.tables)) {
+      state = yeni; render(); return;
+    }
+    // Sayaçlar kontrol panelinde işliyor; takip ekranı değerleri okur.
+    state.live = yeni.live;
+    refreshCounters();
+  }, 1000);
+}
+function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+/* ---------- 9) MODAL ---------- */
+
+function closeModal() {
+  document.getElementById('modalOverlay')?.remove();
+  document.removeEventListener('keydown', modalKey);
+}
+function modalKey(e) { if (e.key === 'Escape') closeModal(); }
+
+function openModal(o) {
+  const { title = '', message = '', showInput = false, inputValue = '', confirmText = 'TAMAM',
+          cancelText = 'VAZGEÇ', danger = false, alertOnly = false, onConfirm = null,
+          bodyHtml = '', onOpen = null, wide = false } = o || {};
+  closeModal();
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay'; ov.id = 'modalOverlay';
+  ov.innerHTML = `<div class="modal-box${wide ? ' wide' : ''}" role="dialog" aria-modal="true">
+    <div class="modal-header"><h3>${esc(title)}</h3></div>
+    <div class="modal-body">
+      ${message ? `<p>${esc(message)}</p>` : ''}
+      ${showInput ? `<input id="modalInput" type="text" value="${esc(inputValue)}" autocomplete="off">` : ''}
+      ${bodyHtml}
+    </div>
+    <div class="modal-actions">
+      ${alertOnly ? '' : `<button type="button" class="ghost" id="modalCancel">${esc(cancelText)}</button>`}
+      <button type="button" class="${danger ? 'red' : ''}" id="modalConfirm">${esc(confirmText)}</button>
+    </div></div>`;
+  document.getElementById('modalRoot').appendChild(ov);
+  ov.addEventListener('mousedown', e => { if (e.target === ov) closeModal(); });
+
+  const c = document.getElementById('modalConfirm');
+  const inp = document.getElementById('modalInput');
+  c.addEventListener('click', () => { const v = inp ? inp.value : true; closeModal(); if (onConfirm) onConfirm(v); });
+  document.getElementById('modalCancel')?.addEventListener('click', closeModal);
+  document.addEventListener('keydown', modalKey);
+  if (inp) { inp.addEventListener('keydown', e => { if (e.key === 'Enter') c.click(); }); setTimeout(() => { inp.focus(); inp.select(); }, 0); }
+  else setTimeout(() => c.focus(), 0);
+  if (typeof onOpen === 'function') onOpen(ov);
+}
+
+/* ---------- 10) KAYDET / PAYLAŞ ---------- */
+
+function indirDosya(icerik, ad, tur) {
+  const url = URL.createObjectURL(new Blob([icerik], { type: tur }));
+  const a = document.createElement('a');
+  a.href = url; a.download = ad;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* Uygulamayı, o anki verileri içine gömerek tek HTML dosyası yapar. */
+function buildStandalone() {
+  const k = document.documentElement.cloneNode(true);
+  k.querySelector('#app').innerHTML = '';
+  k.querySelector('#modalRoot').innerHTML = '';
+  k.querySelectorAll('script[data-embedded]').forEach(e => e.remove());
+  const damga = String(Date.now());
+  const s = k.ownerDocument.createElement('script');
+  s.setAttribute('data-embedded', damga);
+  const govde = JSON.stringify({ stamp: damga, data: state }).split('</').join('<\\/');
+  s.textContent = 'window.__GOMULU__ = ' + govde + ';';
+  k.querySelector('head').appendChild(s);
+  return '<!DOCTYPE html>\n' + k.outerHTML;
+}
+
+function openShare() {
+  openModal({
+    title: 'Kaydet / Başka Bilgisayarda Aç', wide: true, alertOnly: true, confirmText: 'KAPAT',
+    bodyHtml: `
+      <div style="border:1px solid var(--blue);border-radius:10px;padding:12px;background:rgba(52,87,213,.06);display:flex;flex-direction:column;gap:10px">
+        <div class="section-label">Sayfayı verilerle indir (önerilen)</div>
+        <p class="hint">Uygulamanın tamamını, mevcut talepler ve program içine gömülü hâlde tek bir HTML dosyası olarak indirir. Başka bilgisayarda çift tıklayıp açmanız yeterli — sunucu veya internet gerekmez.</p>
+        <div class="row"><button type="button" class="green" id="dlHtml">⬇ SAYFAYI VERİLERLE İNDİR (.html)</button><span id="dlStat" style="font-size:12px;font-weight:600"></span></div>
+      </div>
+      <details class="collapsible"><summary>Diğer</summary><div class="collapsible-body">
+        <div class="row">
+          <button type="button" class="secondary" id="dlJson">VERİ DOSYASI İNDİR (.json)</button>
+          <button type="button" class="secondary" id="upJson">VERİ DOSYASI YÜKLE</button>
+        </div>
+        <button type="button" class="secondary" id="dlCsv">PROGRAMI CSV OLARAK İNDİR</button>
+      </div></details>`,
+    onOpen: () => {
+      const st = document.getElementById('dlStat');
+      document.getElementById('dlHtml').onclick = () => {
+        try { indirDosya(buildStandalone(), `b2b-${new Date().toISOString().slice(0, 10)}.html`, 'text/html;charset=utf-8'); st.textContent = 'İndirildi.'; st.style.color = 'var(--green)'; }
+        catch (e) { st.textContent = 'Hata: ' + e.message; st.style.color = 'var(--red)'; }
+      };
+      document.getElementById('dlJson').onclick = () => indirDosya(JSON.stringify(state, null, 2), 'b2b-veri.json', 'application/json');
+      document.getElementById('dlCsv').onclick = () => {
+        const satir = [['Saat', 'Masa', 'Firma 1', 'Firma 2', 'Süre (dk)']]
+          .concat(state.schedule.map(s => [`${fmtClock(s.start)}-${fmtClock(s.end)}`, s.tableTitle, s.from, s.to, s.duration]));
+        indirDosya('\ufeff' + satir.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n'), 'b2b-program.csv', 'text/csv;charset=utf-8');
+      };
+      document.getElementById('upJson').onclick = () => {
+        const i = document.createElement('input');
+        i.type = 'file'; i.accept = '.json,application/json';
+        i.onchange = () => {
+          const f = i.files?.[0]; if (!f) return;
+          const rd = new FileReader();
+          rd.onload = () => {
+            try {
+              const veri = normalizeState(JSON.parse(String(rd.result)));
+              closeModal();
+              openModal({
+                title: 'Veriyi Yükle', message: 'Bu bilgisayardaki mevcut veriler değiştirilecek. Devam edilsin mi?',
+                confirmText: 'YÜKLE', danger: true,
+                onConfirm: () => { state = veri; saveState(); render(); }
+              });
+            } catch (e) { openModal({ title: 'Okunamadı', message: 'Dosya geçerli değil.', alertOnly: true }); }
+          };
+          rd.readAsText(f);
+        };
+        i.click();
+      };
+    }
+  });
+}
+
+/* İndirilen dosya ilk açıldığında gömülü veriyi yükler. */
+function handleEmbedded() {
+  const g = window.__GOMULU__;
+  if (!g || !g.data) return;
+  const anahtar = 'b2b_emb_' + g.stamp;
+  try { if (localStorage.getItem(anahtar)) return; localStorage.setItem(anahtar, '1'); } catch (e) {}
+  state = normalizeState(g.data);
+  saveState();
+}
+
+/* ---------- BAŞLAT ---------- */
+
+state = loadState();
+handleEmbedded();
+state = loadState();
+applyRoute();
+window.addEventListener('hashchange', applyRoute);
+window.addEventListener('beforeunload', () => { if (tickTimer) clearInterval(tickTimer); stopPolling(); senkronDurdur(); });
+</script>
+</body>
+</html>

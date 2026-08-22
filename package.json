@@ -1,0 +1,15 @@
+{
+  "name": "b2b-gorusme-eslestirme",
+  "private": true,
+  "version": "1.0.0",
+  "description": "B2B Görüşme Eşleştirme Sistemi — etkinlik sonrası ikili görüşmeleri planlayan, canlı sayaç ve sesli anons ile yürüten, Google Forms entegrasyonlu masaüstü uygulaması.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

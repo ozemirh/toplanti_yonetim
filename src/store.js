@@ -92,7 +92,9 @@ export function normalizeState(raw) {
           x: gecerliSayi(sh.x) ? Number(sh.x) : 10 + i * 6,
           y: gecerliSayi(sh.y) ? Number(sh.y) : 70,
           w: gecerliSayi(sh.w) ? Number(sh.w) : tip.w,
-          h: gecerliSayi(sh.h) ? Number(sh.h) : tip.h
+          h: gecerliSayi(sh.h) ? Number(sh.h) : tip.h,
+          // Dönüş açısı (derece). 0–359 aralığına sarılır.
+          rot: Number.isFinite(Number(sh.rot)) ? ((Math.round(Number(sh.rot)) % 360) + 360) % 360 : 0
         };
       })
     : [];

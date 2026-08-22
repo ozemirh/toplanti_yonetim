@@ -82,6 +82,9 @@ const ADIMLAR = [
         <li>Masaları sürükleyerek gerçek salon düzeninize göre dizersiniz</li>
         <li>Bir masaya/şekle tıklayıp <b>✎ ADINI DEĞİŞTİR</b> veya
             <b>🗑 SEÇİLENİ SİL</b> yaparsınız</li>
+        <li>Seçtiğiniz öğede iki tutamaç belirir: <b>sağ alttaki mavi</b>
+            nokta boyutlandırır, <b>üstteki yeşil</b> nokta döndürür
+            (15°'lik adımlarla). Masalar yalnızca boyutlandırılır.</li>
         <li><b>+ Şekil ekle…</b> menüsünden sahne, giriş, çıkış, duvar,
             kayıt, ikram, bekleme alanı, WC, yön oku gibi kroki
             öğelerini eklersiniz</li>

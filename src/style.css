@@ -151,7 +151,23 @@ label{display:block;margin-bottom:5px;color:var(--gray-dim);font-family:var(--fo
   border-radius:var(--radius-sm);overflow:hidden;margin:0;transition:border-color .16s var(--ease),color .16s var(--ease)}
 .hall-shape.circle{border-radius:50%}
 .hall-shape.note{border-style:solid;border-color:var(--yellow);background:rgba(138,91,10,.10);color:var(--yellow)}
+/* container-type: emoji ve etiket, şeklin kendi boyutuna göre ölçeklenir. */
+.hall-shape{flex-direction:column;gap:2px;container-type:size}
+.hall-shape-icon{line-height:1;font-size:clamp(12px,34cqh,34px);filter:saturate(1.05)}
 .hall-shape-label{overflow-wrap:anywhere;line-height:1.18}
+/* Yalnız emoji taşıyan öğelerde (yön oku) sembol alanı doldurur. */
+.hall-shape.arrow .hall-shape-icon{font-size:clamp(16px,60cqh,52px)}
+
+/* --- Boyutlandırma / döndürme tutamaçları (yalnız seçili öğede) ---
+   Tutamaçlar öğenin İÇİNDE konumlanır: hem masa kartı hem şekil
+   overflow:hidden olduğundan dışarı taşan bir tutamaç kırpılır ve
+   tıklanamaz hâle gelirdi. */
+.hall-handle{position:absolute;width:16px;height:16px;border-radius:50%;
+  background:var(--blue);border:2px solid #fff;box-shadow:0 1px 5px rgba(27,34,48,.45);
+  z-index:9;touch-action:none;transition:transform .12s var(--ease)}
+.hall-handle:hover{transform:scale(1.2)}
+.hall-resize{right:3px;bottom:3px;cursor:nwse-resize}
+.hall-rotate{left:50%;top:3px;margin-left:-8px;cursor:grab;background:var(--green)}
 
 /* --- Kroki öğe tipleri --- */
 /* Yapısal: dolu ve koyu, salonun sınırlarını okutur */
